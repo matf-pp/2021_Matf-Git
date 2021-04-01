@@ -34,7 +34,7 @@ optLeGit = subparser (
          )
 
 run :: Command -> IO ()
-run (Init d f) = putStrLn $ "Initializing " ++ d ++ if f then " with FORCE" else ""
+run (Init d f) = Lib.init d f
 run Greet = putStrLn "Hi!"
 
 opts :: ParserInfo Command

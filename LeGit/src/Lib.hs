@@ -1,6 +1,6 @@
-module Lib
-    ( someFunc
-    ) where
+module Lib (
+    Lib.Init.init
+) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import Lib.Init
+
