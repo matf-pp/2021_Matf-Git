@@ -10,12 +10,10 @@ data Command = Greet
              | Init {directory :: String, force :: Bool}
   deriving (Eq, Show)
 
-
-
 optDir :: Parser String
 optDir = strOption (long "directory"
                    <> short 'd' 
-                   <> value "."
+                   <> value ""
                    <> metavar "PATH" 
                    <> help "Path to directory to be initialised into a repository (default: current working directory)")
 

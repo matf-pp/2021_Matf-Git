@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a9490044f8d745e3695fdd0534c5c55d60ad0be186f8d37283d570daf4bc16c5
+-- hash: d45d1006e2b83beb2fa0db6590214d1caa5b09a544c2befc5fb30977a139e697
 
 name:           LeGit
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Lib.Basic
       Lib.Init
   other-modules:
       Paths_LeGit
@@ -35,6 +36,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , directory >=1.3
+    , filemanip >=0.3
+    , filepath >=1.3
     , optparse-applicative >=0.15.1 && <0.17
   default-language: Haskell2010
 
@@ -48,6 +52,9 @@ executable LeGit-exe
   build-depends:
       LeGit
     , base >=4.7 && <5
+    , directory >=1.3
+    , filemanip >=0.3
+    , filepath >=1.3
     , optparse-applicative >=0.15.1 && <0.17
   default-language: Haskell2010
 
@@ -62,5 +69,8 @@ test-suite LeGit-test
   build-depends:
       LeGit
     , base >=4.7 && <5
+    , directory >=1.3
+    , filemanip >=0.3
+    , filepath >=1.3
     , optparse-applicative >=0.15.1 && <0.17
   default-language: Haskell2010
