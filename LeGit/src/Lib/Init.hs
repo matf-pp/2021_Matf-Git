@@ -6,36 +6,41 @@ import System.Directory
 import System.FilePath
 import System.Exit
 
-errorCheck :: IO Bool -> String -> String -> IO ()
-errorCheck cond dir msg = do
-        b <- cond
-        if b then putStrLn ("Error:: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")
+erorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
+erorDirCheck cond dir msg = do
+        b <- cond dir
+        if b then putStrLn ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")
                >> exitFailure
              else return ()
 
 initDir :: String -> IO FilePath
 initDir dirStr = if null dirStr
                  then getCurrentDirectory
-                 else return dirStr
+                 else makeAbsolute dirStr
 
-initRepo :: FilePath -> IO ()
-initRepo path = do
-    let repo = joinPath [path, repoDirName]
-    createDirectory repo 
+initRepo :: Repo -> IO ()
+initRepo repo = mapM_ createDirectory [f repo | f <- [repoDir]]
+
+deleteRepo :: Repo -> IO ()
+deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
 
 initForce :: FilePath -> IO ()
-initForce fp = return ()
+initForce fp = do
+    listRepos fp >>= mapM_ deleteRepo
+    findRepo fp >>= deleteMaybeRepo
+    initRepo (fromBaseDir fp)
+        where deleteMaybeRepo Nothing  = return ()
+              deleteMaybeRepo (Just r) = deleteRepo r
 
 initSoft :: FilePath -> IO ()
-initSoft fp = do
-    errorCheck (hasRepos fp) fp "contains a repository"
-    errorCheck (isRepo fp) fp "already a repository"
-    initRepo fp
+initSoft fp = erorDirCheck isRepo fp "already a repository"
+           >> erorDirCheck hasRepos fp "contains a repository"
+           >> initRepo (fromBaseDir fp)
 
 init :: FilePath -> Bool -> IO ()
 init d f = do
     dir <- initDir d
-    errorCheck (not <$> doesDirectoryExist dir) dir "not a directory"
+    erorDirCheck (\d -> not <$> doesDirectoryExist d) dir "not a directory"
     putStrLn $ "Initializing " ++ dir 
     (if f then initForce else initSoft) dir
     putStrLn "Done!"
