@@ -1,6 +1,6 @@
 module Lib.Basic (
     --Types and getters
-    Repo, baseDir, repoDir,
+    Repo, baseDir, repoDir, infoDir, usernameFile, emailFile,
 
     --Basic constructors
     fromBaseDir, 
@@ -16,14 +16,23 @@ import System.Directory
 import System.FilePath
 import System.FilePath.Find
 
-data Repo = Repo {baseDir :: FilePath, repoDir :: FilePath}
+data Repo = Repo {
+    baseDir :: FilePath, 
+    repoDir :: FilePath,
+    infoDir :: FilePath,
+    usernameFile :: FilePath,
+    emailFile :: FilePath
+}
 
 repoDirName = ".LeGit"
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
 fromBaseDir :: FilePath -> Repo
 fromBaseDir bd = Repo bd 
-               $ joinPath [bd, repoDirName]
+                    (joinPath [bd, repoDirName])
+                    (joinPath [bd, repoDirName, "info"])
+                    (joinPath [bd, repoDirName, "info", "username"])
+                    (joinPath [bd, repoDirName, "info", "email"])
 
 fromRepoDir :: FilePath -> Repo
 fromRepoDir rd = fromBaseDir $ joinPath $ (reverse . tail . reverse . splitDirectories) rd
