@@ -19,7 +19,8 @@ initDir dirStr = if null dirStr
                  else makeAbsolute dirStr
 
 initRepo :: Repo -> IO ()
-initRepo repo = mapM_ createDirectory [f repo | f <- [repoDir]]
+initRepo repo = mapM_ createDirectory 
+              $ map ($repo) [repoDir]
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
