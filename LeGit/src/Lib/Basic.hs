@@ -24,7 +24,10 @@ data Repo = Repo {
     emailFile :: FilePath
 }
 
+repoDirName :: String
 repoDirName = ".LeGit"
+
+isRepoDir :: FindClause Bool
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
 fromBaseDir :: FilePath -> Repo
@@ -39,7 +42,7 @@ fromRepoDir = fromBaseDir . dropFileName
 
 
 listRepos :: FilePath -> IO [Repo]
-listRepos fp = fmap fromRepoDir <$> find always isRepoDir fp 
+listRepos fp = map fromRepoDir <$> find always isRepoDir fp 
 
 hasRepos :: FilePath -> IO Bool
 hasRepos = fmap (not . null) . listRepos
