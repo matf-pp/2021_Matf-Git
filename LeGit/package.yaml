@@ -37,6 +37,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
+    - -Wall
     dependencies:
     - LeGit
 

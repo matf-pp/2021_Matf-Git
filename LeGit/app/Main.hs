@@ -70,8 +70,8 @@ run :: Command -> IO ()
 run Greet = putStrLn "Hi!"
 run (Init d f) = optDirIstance d >>= (\d -> Lib.init d f)
 run (Set d args) = optDirIstance d >>= (\d -> mapM_ (pom d) args)
-    where pom r (UserName u) = setUsername r u
-          pom r (Email e) = setEmail r e
+    where pom r (UserName u) = Lib.setUsername r u
+          pom r (Email e) = Lib.setEmail r e
 
 main :: IO ()
 main = execParser opts >>= run
