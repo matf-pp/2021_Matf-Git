@@ -5,19 +5,17 @@ import System.Directory
 import System.Exit
 import System.FilePath
 
-setDir :: String -> IO FilePath
-setDir dirStr = if null dirStr
-                then getCurrentDirectory
-                else makeAbsolute dirStr
+writeRepoInfo :: (Repo -> FilePath) -> FilePath -> String -> IO ()
+writeRepoInfo f fp s = findRepo fp >>= pom 
+                where pom (Just r) = writeFile (f r) s
+                      pom _ = putStr "Error :: "
+                           >> putStr fp 
+                           >> putStrLn " can't be set: not a repository!"
+                           >> exitFailure
+                      
 
-writeRepoInfo :: (Repo -> FilePath) -> String -> String -> IO ()
-writeRepoInfo f fp s = setDir fp >>= findRepo >>= (\d -> pom f d s)
-                where pom f Nothing s = putStrLn (str fp) >> exitFailure
-                            where str fp = "Error :: " ++ fp ++ " can't be set: not a repository!"
-                      pom f (Just r) s = writeFile (f r) s
-
-setUsername :: String -> String -> IO ()
+setUsername :: FilePath -> String -> IO ()
 setUsername = writeRepoInfo usernameFile
 
-setEmail :: String -> String -> IO ()
+setEmail :: FilePath -> String -> IO ()
 setEmail = writeRepoInfo emailFile

@@ -13,11 +13,6 @@ errorDirCheck cond dir msg = do
                >> exitFailure
              else return ()
 
-initDir :: String -> IO FilePath
-initDir dirStr = if null dirStr
-                 then getCurrentDirectory
-                 else makeAbsolute dirStr
-
 initRepo :: Repo -> IO ()
 initRepo repo = mapM_ createDirectory 
               $ map ($repo) [repoDir, infoDir]
@@ -39,9 +34,8 @@ initSoft fp = errorDirCheck isRepo fp "already a repository"
            >> initRepo (fromBaseDir fp)
 
 init :: FilePath -> Bool -> IO ()
-init d f = do
-    dir <- initDir d
-    errorDirCheck (\d -> not <$> doesDirectoryExist d) dir "not a directory"
+init dir f = do
+    errorDirCheck (fmap not . doesDirectoryExist) dir "not a directory"
     putStrLn $ "Initializing " ++ dir 
     (if f then initForce else initSoft) dir
     putStrLn "Done!"

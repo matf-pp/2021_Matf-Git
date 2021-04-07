@@ -35,26 +35,20 @@ fromBaseDir bd = Repo bd
                     (joinPath [bd, repoDirName, "info", "email"])
 
 fromRepoDir :: FilePath -> Repo
-fromRepoDir rd = fromBaseDir $ joinPath $ (reverse . tail . reverse . splitDirectories) rd
+fromRepoDir = fromBaseDir . dropFileName
 
 
 listRepos :: FilePath -> IO [Repo]
 listRepos fp = fmap fromRepoDir <$> find always isRepoDir fp 
 
 hasRepos :: FilePath -> IO Bool
-hasRepos fp = not . null <$> listRepos fp
-
-allParents :: FilePath -> IO [FilePath]
-allParents path = reverse . splitDirectories <$> makeAbsolute path >>= return . joinParents
-                where joinParents (x:xs) = (joinPath . reverse) (x:xs) : joinParents xs 
-                      joinParents x = x
+hasRepos = fmap (not . null) . listRepos
 
 findRepo :: FilePath -> IO (Maybe Repo)
-findRepo fp = allParents fp >>= getRepo
-                where getRepo (x:xs) = do
-                          isRepo <- (\l -> length l == 1) <$> find (depth ==? 0) isRepoDir x
-                          if isRepo then return $ Just (fromBaseDir x) else getRepo xs
+findRepo = getRepo . (\(h:t) -> foldl (\acc arg -> (joinPath [head acc, arg]) : acc) [h] t) . splitPath
+                where getRepo (x:xs) = not . null <$> find (depth ==? 0) isRepoDir x
+                                   >>= (\b -> if b then return . Just $ fromBaseDir x else getRepo xs)
                       getRepo _ = return Nothing
 
 isRepo :: FilePath -> IO Bool
-isRepo fp = not . null <$> findRepo fp
+isRepo = fmap (not . null) . findRepo
