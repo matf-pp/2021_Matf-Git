@@ -8,7 +8,7 @@ import System.Exit
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
 errorDirCheck cond dir msg =  cond dir
             >>= (putStr "Error :: " >> putStr dir >> putStr " can't be initialized: " >> putStr msg 
-            >> putChar '!' >> exitFailure) ? return ()
+            >> putStrLn "!" >> exitFailure) ? return ()
 
 initRepo :: Repo -> IO ()
 initRepo = mapM_ createDirectory <$> sequenceA [repoDir, infoDir]

@@ -58,7 +58,7 @@ hasRepos :: FilePath -> IO Bool
 hasRepos = fmap (not . null) . listRepos
 
 findRepo :: FilePath -> IO (Maybe Repo)
-findRepo = getRepo . (scanr1 (</>)) . splitPath
+findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
                 where getRepo (x:xs) = not . null <$> find (depth ==? 0) isRepoDir x
                                    >>= (return . Just $ fromBaseDir x) ? getRepo xs
                       getRepo _ = return Nothing
