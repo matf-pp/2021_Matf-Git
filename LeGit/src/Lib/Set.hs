@@ -1,9 +1,7 @@
 module Lib.Set (setUsername, setEmail) where
 
 import Lib.Basic
-import System.Directory
 import System.Exit
-import System.FilePath
 
 writeRepoInfo :: (Repo -> FilePath) -> FilePath -> String -> IO ()
 writeRepoInfo f fp s = findRepo fp >>= pom 

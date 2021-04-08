@@ -3,7 +3,6 @@ module Lib.Init (Lib.Init.init) where
 import Lib.Basic
 
 import System.Directory
-import System.FilePath
 import System.Exit
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()

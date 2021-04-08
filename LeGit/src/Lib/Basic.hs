@@ -15,7 +15,6 @@ module Lib.Basic (
     (?)
 ) where
 
-import System.Directory
 import System.FilePath
 import System.FilePath.Find
 
