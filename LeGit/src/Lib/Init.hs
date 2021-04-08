@@ -7,11 +7,9 @@ import System.FilePath
 import System.Exit
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
-errorDirCheck cond dir msg = do
-        b <- cond dir
-        if b then putStrLn ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")
-               >> exitFailure
-             else return ()
+errorDirCheck cond dir msg =  cond dir
+            >>= (putStr "Error :: " >> putStr dir >> putStr " can't be initialized: " >> putStr msg 
+            >> putChar '!' >> exitFailure) ? return ()
 
 initRepo :: Repo -> IO ()
 initRepo = mapM_ createDirectory <$> sequenceA [repoDir, infoDir]
@@ -36,5 +34,5 @@ init :: FilePath -> Bool -> IO ()
 init dir f = do
     errorDirCheck (fmap not . doesDirectoryExist) dir "not a directory"
     putStrLn $ "Initializing " ++ dir 
-    (if f then initForce else initSoft) dir
+    (initForce ? initSoft) f dir
     putStrLn "Done!"
