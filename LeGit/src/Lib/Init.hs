@@ -11,7 +11,8 @@ errorDirCheck cond dir msg =  cond dir
             >> putStrLn "!" >> exitFailure) ? return ()
 
 initRepo :: Repo -> IO ()
-initRepo = mapM_ createDirectory <$> sequenceA [repoDir, infoDir]
+initRepo = mapM_ createDirectory 
+            <$> sequenceA [repoDir, infoDir, pointersDir, refsDir, tagsDir, objectsDir, commitsDir]
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
