@@ -7,6 +7,9 @@ import System.Directory
 data SetType = UserName String
              | Email String
   deriving (Eq, Show)
+  
+data PrintType = UserInfo
+  deriving (Eq, Show)
 
 optUserName :: Parser SetType
 optUserName = UserName <$> strOption (
@@ -22,10 +25,17 @@ optEmail = Email <$> strOption (
               <> metavar "EMAIL"
               <> help "Pass the email of the user writing to the repository"
               )
+              
+optInfo :: Parser PrintType
+optInfo = flag' UserInfo (
+             long "info"
+             <> help "Prints user information"
+             )
 
 data Command = Greet
              | Init {directory :: String, force :: Bool}
              | Set  {directory :: String, setArgs :: [SetType]}
+             | Print {directory :: String, printArg :: PrintType}
   deriving (Eq, Show)
 
 optDir :: Parser String
@@ -46,6 +56,9 @@ initOptions = Init <$> optDir <*> optForce
 setOptions :: Parser Command
 setOptions = Set <$> optDir <*> some (optEmail <|> optUserName)
 
+printOptions :: Parser Command
+printOptions = Print <$> optDir <*> (optInfo)
+
 
 optDirIstance :: String -> IO FilePath
 optDirIstance dirStr = if null dirStr
@@ -57,6 +70,7 @@ optLeGit = subparser (
               command "greet" (info (pure Greet) (progDesc "Print greeting"))
            <> command "init" (info initOptions (progDesc "Initialises a directory into a LeGit repo"))
            <> command "set" (info setOptions (progDesc "Sets repository specific information"))
+           <> command "show" (info printOptions (progDesc "Prints requested information"))
          )
 
 opts :: ParserInfo Command
@@ -70,6 +84,8 @@ run (Init d f) = optDirIstance d >>= flip Lib.init f
 run (Set d args) = optDirIstance d >>= (\dir -> mapM_ (pom dir) args)
     where pom r (UserName u) = Lib.setUsername r u
           pom r (Email e) = Lib.setEmail r e
+run (Print d arg) = optDirIstance d >>= pom arg
+    where pom UserInfo = Lib.showInfo
 
 main :: IO ()
 main = execParser opts >>= run
