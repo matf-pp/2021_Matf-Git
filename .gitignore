@@ -1,3 +1,4 @@
 .gitignore
 LeGit/.stack-work
 test/
+LeGit/LeGit.cabal
