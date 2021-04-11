@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d36b13ffe688afdfaa7a67b7374e89909640a7c467a9195315e6439b46bebe4
+-- hash: 983bc50f244d25c227ef5dc40012ff804b6a23326775e9d7c14f2841f4f92a44
 
 name:           LeGit
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Lib.Basic
       Lib.Init
       Lib.Set
+      Lib.Show
   other-modules:
       Paths_LeGit
   hs-source-dirs:
