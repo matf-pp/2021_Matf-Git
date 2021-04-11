@@ -12,8 +12,8 @@ readTree r = pom . Text.JSON.decode <$> readFile (treeFile r)
     where pom (Ok rez) = rez
           pom _ = JSNull
           
-writeTree :: JSValue -> Repo -> IO () 
-writeTree js r = writeFile (treeFile r) (Text.JSON.encode js)
+writeTree :: Repo -> JSValue -> IO () 
+writeTree r js = writeFile (treeFile r) (Text.JSON.encode js)
 
 
 nameGen :: JSValue -> String

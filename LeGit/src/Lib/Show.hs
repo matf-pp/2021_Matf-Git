@@ -8,9 +8,7 @@ import System.FilePath
 showRepoUserInfo :: Repo -> IO ()                                   
 showRepoUserInfo r = putStr "username: " >> pom usernameFile
                   >> putStr "email: " >> pom emailFile
-    where pom f = doesFileExist (f r) 
-                   >>= (\b -> if b then readFile (f r) >>= putStrLn
-                                   else putStrLn "not set") 
+    where pom f = doesFileExist (f r) >>= (readFile (f r) >>= putStrLn) ? (putStrLn "not set")
 
 showInfo :: FilePath -> IO ()
 showInfo fp = findRepo fp >>= pom

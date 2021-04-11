@@ -58,11 +58,11 @@ fromBaseDir bd = Repo bd (bd </> repoDirName)
                     (joinPath [bd, repoDirName, "pointers"])
                     (joinPath [bd, repoDirName, "pointers", "refs"])
                     (joinPath [bd, repoDirName, "pointers", "tags"])
-                    (joinPath [bd, repoDirName, "pointers", "head"])
+                    (joinPath [bd, repoDirName, "pointers", "head.json"])
                     (joinPath [bd, repoDirName, "objects"])
                     (joinPath [bd, repoDirName, "objects", "commits"])
                     (joinPath [bd, repoDirName, "objects", "tree.json"])
-                    (joinPath [bd, repoDirName, "objects", "ignore"])
+                    (joinPath [bd, repoDirName, "objects", "ignore.json"])
 
 fromRepoDir :: FilePath -> Repo
 fromRepoDir = fromBaseDir . dropFileName
