@@ -61,7 +61,7 @@ fromBaseDir bd = Repo bd (bd </> repoDirName)
                     (joinPath [bd, repoDirName, "pointers", "head"])
                     (joinPath [bd, repoDirName, "objects"])
                     (joinPath [bd, repoDirName, "objects", "commits"])
-                    (joinPath [bd, repoDirName, "objects", "tree"])
+                    (joinPath [bd, repoDirName, "objects", "tree.json"])
                     (joinPath [bd, repoDirName, "objects", "ignore"])
 
 fromRepoDir :: FilePath -> Repo
