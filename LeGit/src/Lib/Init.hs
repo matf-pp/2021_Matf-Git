@@ -13,6 +13,7 @@ errorDirCheck cond dir msg =  cond dir
 initRepo :: Repo -> IO ()
 initRepo = mapM_ createDirectory 
             <$> sequenceA [repoDir, infoDir, pointersDir, refsDir, tagsDir, objectsDir, commitsDir]
+            >> writeFile (ignoreFile r) "[]"
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
