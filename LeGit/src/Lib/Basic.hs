@@ -9,12 +9,23 @@ module Lib.Basic (
     listRepos,  --lists all repositories within a directory
     hasRepos,   --check if a repository within the directory exists
     findRepo,   --find the repository this path belongs to by checking if any parent is a repository
-    isRepo      --check if a path belongs to any repository
+    isRepo,     --check if a path belongs to any repository
+
+    --Utility
+    (?)
 ) where
 
-import System.Directory
 import System.FilePath
 import System.FilePath.Find
+
+-- Utility functions not based on Repo
+
+infixr 2 ?
+(?) :: a -> a -> Bool -> a 
+(?) x _ True  = x
+(?) _ y False = y
+
+-- Repo stuff
 
 data Repo = Repo {
     baseDir :: FilePath, 
@@ -24,12 +35,14 @@ data Repo = Repo {
     emailFile :: FilePath
 }
 
+repoDirName :: String
 repoDirName = ".LeGit"
+
+isRepoDir :: FindClause Bool
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
 fromBaseDir :: FilePath -> Repo
-fromBaseDir bd = Repo bd 
-                    (joinPath [bd, repoDirName])
+fromBaseDir bd = Repo bd (bd </> repoDirName)
                     (joinPath [bd, repoDirName, "info"])
                     (joinPath [bd, repoDirName, "info", "username"])
                     (joinPath [bd, repoDirName, "info", "email"])
@@ -39,15 +52,15 @@ fromRepoDir = fromBaseDir . dropFileName
 
 
 listRepos :: FilePath -> IO [Repo]
-listRepos fp = fmap fromRepoDir <$> find always isRepoDir fp 
+listRepos fp = map fromRepoDir <$> find always isRepoDir fp 
 
 hasRepos :: FilePath -> IO Bool
 hasRepos = fmap (not . null) . listRepos
 
 findRepo :: FilePath -> IO (Maybe Repo)
-findRepo = getRepo . (\(h:t) -> foldl (\acc arg -> (joinPath [head acc, arg]) : acc) [h] t) . splitPath
+findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
                 where getRepo (x:xs) = not . null <$> find (depth ==? 0) isRepoDir x
-                                   >>= (\b -> if b then return . Just $ fromBaseDir x else getRepo xs)
+                                   >>= (return . Just $ fromBaseDir x) ? getRepo xs
                       getRepo _ = return Nothing
 
 isRepo :: FilePath -> IO Bool

@@ -3,19 +3,15 @@ module Lib.Init (Lib.Init.init) where
 import Lib.Basic
 
 import System.Directory
-import System.FilePath
 import System.Exit
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
-errorDirCheck cond dir msg = do
-        b <- cond dir
-        if b then putStrLn ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")
-               >> exitFailure
-             else return ()
+errorDirCheck cond dir msg =  cond dir
+            >>= (putStr "Error :: " >> putStr dir >> putStr " can't be initialized: " >> putStr msg 
+            >> putStrLn "!" >> exitFailure) ? return ()
 
 initRepo :: Repo -> IO ()
-initRepo repo = mapM_ createDirectory 
-              $ map ($repo) [repoDir, infoDir]
+initRepo = mapM_ createDirectory <$> sequenceA [repoDir, infoDir]
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
@@ -37,5 +33,5 @@ init :: FilePath -> Bool -> IO ()
 init dir f = do
     errorDirCheck (fmap not . doesDirectoryExist) dir "not a directory"
     putStrLn $ "Initializing " ++ dir 
-    (if f then initForce else initSoft) dir
+    (initForce ? initSoft) f dir
     putStrLn "Done!"
