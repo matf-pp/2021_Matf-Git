@@ -1,6 +1,6 @@
-module Lib.Ignore () where
+module LeGit.Ignore () where
 
-import Lib.Basic
+import LeGit.Basic
 import System.FilePath
 import Text.JSON
 

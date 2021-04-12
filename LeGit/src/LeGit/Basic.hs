@@ -1,4 +1,4 @@
-module Lib.Basic (
+module LeGit.Basic (
     --Types and getters
     Repo, baseDir, repoDir, infoDir, usernameFile, emailFile, 
         pointersDir, refsDir, tagsDir, headFile, objectsDir, commitsDir, treeFile, ignoreFile,

@@ -1,6 +1,6 @@
-module Lib.Set (setUsername, setEmail) where
+module LeGit.Set (setUsername, setEmail) where
 
-import Lib.Basic
+import LeGit.Basic
 import System.Exit
 
 writeRepoInfo :: (Repo -> FilePath) -> FilePath -> String -> IO ()

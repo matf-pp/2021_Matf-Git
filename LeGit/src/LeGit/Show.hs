@@ -1,6 +1,6 @@
-module Lib.Show (showInfo) where
+module LeGit.Show (showInfo) where
 
-import Lib.Basic
+import LeGit.Basic
 import System.Directory
 import System.Exit
 import System.FilePath

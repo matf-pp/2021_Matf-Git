@@ -1,6 +1,6 @@
-module Lib.Init (Lib.Init.init) where
+module LeGit.Init (LeGit.Init.init) where
 
-import Lib.Basic
+import LeGit.Basic
 
 import System.Directory
 import System.Exit
