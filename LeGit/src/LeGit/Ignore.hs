@@ -1,7 +1,6 @@
 module LeGit.Ignore () where
 
 import LeGit.Basic
-import System.FilePath
 import Text.JSON
 
 readIgnore :: Repo -> IO JSValue

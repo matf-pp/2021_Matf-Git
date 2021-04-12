@@ -3,7 +3,6 @@ module LeGit.Show (showInfo) where
 import LeGit.Basic
 import System.Directory
 import System.Exit
-import System.FilePath
 
 showRepoUserInfo :: Repo -> IO ()                                   
 showRepoUserInfo r = putStr "username: " >> pom usernameFile
