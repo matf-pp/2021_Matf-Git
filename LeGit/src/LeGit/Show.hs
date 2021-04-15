@@ -1,6 +1,8 @@
-module LeGit.Show (showInfo) where
+module LeGit.Show (showInfo, showIgnores) where
 
 import LeGit.Basic
+import LeGit.Ignore
+
 import System.Directory
 import System.Exit
 
@@ -16,3 +18,8 @@ showInfo fp = findRepo fp >>= pom
                       >> putStr fp 
                       >> putStrLn " can't be shown: not a repository!"
                       >> exitFailure
+
+showIgnores :: FilePath -> IO ()
+showIgnores fp = putStrLn "Ignores:" 
+             >> (getIgnores $ fromBaseDir fp )
+            >>= mapM_ putStrLn

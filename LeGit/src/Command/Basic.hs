@@ -1,17 +1,18 @@
 module Command.Basic (
-    SetType(UserName, Email), 
-    PrintType(UserInfo), 
+    SetType(SetUserName, SetEmail), 
+    PrintType(PrintUserInfo, PrintIgnore), 
     Command(Greet, Init, Set, Print),
     optDir
 ) where
 
 import Options.Applicative
 
-data SetType = UserName String
-             | Email String
+data SetType = SetUserName String
+             | SetEmail String
   deriving (Eq, Show)
   
-data PrintType = UserInfo
+data PrintType = PrintUserInfo
+               | PrintIgnore
   deriving (Eq, Show)
 
 data Command = Greet

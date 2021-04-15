@@ -13,10 +13,11 @@ run :: Command -> IO ()
 run Greet = putStrLn "Hi!"
 run (Init d f) = directory d >>= flip LeGit.init f
 run (Set d args) = directory d >>= (\dir -> mapM_ (pom dir) args)
-    where pom r (UserName u) = LeGit.setUsername r u
-          pom r (Email e) = LeGit.setEmail r e
+    where pom r (SetUserName u) = LeGit.setUsername r u
+          pom r (SetEmail e) = LeGit.setEmail r e
 run (Print d arg) = directory d >>= pom arg
-    where pom UserInfo = LeGit.showInfo
+    where pom PrintUserInfo = LeGit.showInfo
+          pom PrintIgnore = LeGit.showIgnores
 
 main :: IO ()
 main = execOpt >>= run

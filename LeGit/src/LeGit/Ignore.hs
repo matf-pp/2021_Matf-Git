@@ -1,15 +1,15 @@
-module LeGit.Ignore () where
+module LeGit.Ignore (getIgnores) where
 
 import LeGit.Basic
 import Text.JSON
 
-readIgnore :: Repo -> IO JSValue
-readIgnore r = pom . decode <$> readFile (ignoreFile r)
+readIgnores :: Repo -> IO JSValue
+readIgnores = fmap (pom . decode) . readFile . ignoreFile
     where pom (Ok rez) = rez
           pom _ = JSArray []
           
-writeIgnore :: Repo -> JSValue -> IO () 
-writeIgnore r js = writeFile (ignoreFile r) (encode js)
+writeIgnores :: Repo -> JSValue -> IO () 
+writeIgnores r = writeFile (ignoreFile r) . encode
 
 jsonToFilePaths :: JSValue -> [FilePath]
 jsonToFilePaths (JSArray xs) = filter (not . null) $ map pom xs
@@ -19,6 +19,9 @@ jsonToFilePaths _ = []
 
 filePathsToJson :: [FilePath] -> JSValue
 filePathsToJson = showJSONs
+
+getIgnores :: Repo -> IO [FilePath]
+getIgnores = fmap jsonToFilePaths . readIgnores
 
 -- showIgnore :: FilePath -> IO ()
 -- showIgnore fp = findRepo fp >>= pom

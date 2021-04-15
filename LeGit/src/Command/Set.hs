@@ -4,7 +4,7 @@ import Command.Basic
 import Options.Applicative
 
 optUserName :: Parser SetType
-optUserName = UserName <$> strOption (
+optUserName = SetUserName <$> strOption (
                  long "username"
                  <> short 'u'
                  <> metavar "USER_NAME"
@@ -12,7 +12,7 @@ optUserName = UserName <$> strOption (
                  )
 
 optEmail :: Parser SetType
-optEmail = Email <$> strOption (
+optEmail = SetEmail <$> strOption (
               long "email"
               <> metavar "EMAIL"
               <> help "Pass the email of the user writing to the repository"
