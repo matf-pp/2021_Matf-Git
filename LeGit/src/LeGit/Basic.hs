@@ -12,12 +12,16 @@ module LeGit.Basic (
     findRepo,   --find the repository this path belongs to by checking if any parent is a repository
     isRepo,     --check if a path belongs to any repository
 
+    --JSON operations
+    jsonExt, readJsonFromRepo, writeJsonToRepo,
+
     --Utility
     (?)
 ) where
 
 import System.FilePath
 import System.FilePath.Find
+import Text.JSON
 
 -- Utility functions not based on Repo
 
@@ -47,6 +51,9 @@ data Repo = Repo {
 repoDirName :: String
 repoDirName = ".LeGit"
 
+jsonExt :: FilePath -> FilePath
+jsonExt = (<.> "json")
+
 isRepoDir :: FindClause Bool
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
@@ -58,11 +65,11 @@ fromBaseDir bd = Repo bd (bd </> repoDirName)
                     (joinPath [bd, repoDirName, "pointers"])
                     (joinPath [bd, repoDirName, "pointers", "refs"])
                     (joinPath [bd, repoDirName, "pointers", "tags"])
-                    (joinPath [bd, repoDirName, "pointers", "head.json"])
+                    (jsonExt $ joinPath [bd, repoDirName, "pointers", "head"])
                     (joinPath [bd, repoDirName, "objects"])
                     (joinPath [bd, repoDirName, "objects", "commits"])
-                    (joinPath [bd, repoDirName, "objects", "tree.json"])
-                    (joinPath [bd, repoDirName, "objects", "ignore.json"])
+                    (jsonExt $ joinPath [bd, repoDirName, "objects", "tree"])
+                    (jsonExt $ joinPath [bd, repoDirName, "objects", "ignore"])
 
 fromRepoDir :: FilePath -> Repo
 fromRepoDir = fromBaseDir . dropFileName
@@ -82,3 +89,12 @@ findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
 
 isRepo :: FilePath -> IO Bool
 isRepo = fmap (not . null) . findRepo
+
+
+readJsonFromRepo :: (Repo -> FilePath) -> JSValue -> Repo -> IO JSValue
+readJsonFromRepo f d = fmap (pom . decode) . readFile . f
+                        where pom (Ok a) = a
+                              pom _      = d
+
+writeJsonToRepo :: (Repo -> FilePath) -> Repo -> JSValue -> IO ()
+writeJsonToRepo f r = writeFile (f r) . encode

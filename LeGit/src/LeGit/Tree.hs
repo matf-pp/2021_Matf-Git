@@ -1,4 +1,4 @@
-module LeGit.Tree () where
+module LeGit.Tree (nameGen) where
 
 import Text.JSON
 import Crypto.Hash.SHA256
@@ -8,13 +8,10 @@ import Data.ByteString.UTF8
 import LeGit.Basic
 
 readTree :: Repo -> IO JSValue
-readTree r = pom . Text.JSON.decode <$> readFile (treeFile r)
-    where pom (Ok rez) = rez
-          pom _ = JSNull
+readTree = readJsonFromRepo treeFile JSNull
           
 writeTree :: Repo -> JSValue -> IO () 
-writeTree r js = writeFile (treeFile r) (Text.JSON.encode js)
-
+writeTree = writeJsonToRepo treeFile
 
 nameGen :: JSValue -> String
 nameGen = unpack . encodeHex . hash . fromString . Text.JSON.encode
