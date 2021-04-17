@@ -1,19 +1,13 @@
-module LeGit.Set (setUsername, setEmail) where
+module LeGit.Set (setInfo) where
 
 import LeGit.Basic
+import LeGit.Info
 import System.Exit
 
-writeRepoInfo :: (Repo -> FilePath) -> FilePath -> String -> IO ()
-writeRepoInfo f fp s = findRepo fp >>= pom 
-                where pom (Just r) = writeFile (f r) s
+setInfo :: FilePath -> [(String, String)] -> IO ()
+setInfo fp ss = findRepo fp >>= pom
+                where pom (Just r) = changeInfo ss r
                       pom _ = putStr "Error :: "
                            >> putStr fp 
                            >> putStrLn " can't be set: not a repository!"
                            >> exitFailure
-                      
-
-setUsername :: FilePath -> String -> IO ()
-setUsername = writeRepoInfo usernameFile
-
-setEmail :: FilePath -> String -> IO ()
-setEmail = writeRepoInfo emailFile

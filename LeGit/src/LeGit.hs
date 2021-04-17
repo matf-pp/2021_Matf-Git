@@ -1,6 +1,6 @@
 module LeGit (
     LeGit.Init.init,
-    LeGit.Set.setUsername, LeGit.Set.setEmail,
+    LeGit.Set.setInfo,
     LeGit.Show.showInfo, showIgnores
 ) where
 

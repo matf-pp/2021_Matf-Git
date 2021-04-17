@@ -1,7 +1,7 @@
 module LeGit.Basic (
     --Types and getters
-    Repo, baseDir, repoDir, infoDir, usernameFile, emailFile, 
-        pointersDir, refsDir, tagsDir, headFile, objectsDir, commitsDir, treeFile, ignoreFile,
+    Repo, baseDir, repoDir, pointersDir, refsDir, tagsDir, headFile, 
+    objectsDir, commitsDir, treeFile, ignoreFile, infoFile,
 
     --Basic constructors
     fromBaseDir, 
@@ -21,6 +21,7 @@ module LeGit.Basic (
 
 import System.FilePath
 import System.FilePath.Find
+import qualified System.IO.Strict as S
 import Text.JSON
 
 -- Utility functions not based on Repo
@@ -35,9 +36,6 @@ infixr 2 ?
 data Repo = Repo {
     baseDir :: FilePath, 
         repoDir :: FilePath,
-            infoDir :: FilePath,
-                usernameFile :: FilePath,
-                emailFile :: FilePath,
             pointersDir :: FilePath,
                 refsDir :: FilePath,
                 tagsDir :: FilePath,
@@ -45,7 +43,8 @@ data Repo = Repo {
             objectsDir :: FilePath,
                 commitsDir :: FilePath,
                 treeFile :: FilePath,
-                ignoreFile :: FilePath
+                ignoreFile :: FilePath,
+            infoFile :: FilePath
 }
 
 repoDirName :: String
@@ -59,9 +58,6 @@ isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
 fromBaseDir :: FilePath -> Repo
 fromBaseDir bd = Repo bd (bd </> repoDirName)
-                    (joinPath [bd, repoDirName, "info"])
-                    (joinPath [bd, repoDirName, "info", "username"])
-                    (joinPath [bd, repoDirName, "info", "email"])
                     (joinPath [bd, repoDirName, "pointers"])
                     (joinPath [bd, repoDirName, "pointers", "refs"])
                     (joinPath [bd, repoDirName, "pointers", "tags"])
@@ -70,6 +66,7 @@ fromBaseDir bd = Repo bd (bd </> repoDirName)
                     (joinPath [bd, repoDirName, "objects", "commits"])
                     (jsonExt $ joinPath [bd, repoDirName, "objects", "tree"])
                     (jsonExt $ joinPath [bd, repoDirName, "objects", "ignore"])
+                    (jsonExt $ joinPath [bd, repoDirName, "info"])
 
 fromRepoDir :: FilePath -> Repo
 fromRepoDir = fromBaseDir . dropFileName
@@ -92,7 +89,7 @@ isRepo = fmap (not . null) . findRepo
 
 
 readJsonFromRepo :: (Repo -> FilePath) -> JSValue -> Repo -> IO JSValue
-readJsonFromRepo f d = fmap (pom . decode) . readFile . f
+readJsonFromRepo f d = fmap (pom . decode) . S.readFile . f
                         where pom (Ok a) = a
                               pom _      = d
 
