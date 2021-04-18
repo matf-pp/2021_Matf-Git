@@ -1,7 +1,7 @@
 module LeGit (
     LeGit.Init.init,
     LeGit.Set.setInfo,
-    LeGit.Show.showInfo, LeGit.Show.showIgnores
+    LeGit.Show.showInfo, LeGit.Show.showIgnores,
     LeGit.Ignore.addIgnores, LeGit.Ignore.removeIgnores
 ) where
 

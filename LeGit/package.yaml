@@ -26,6 +26,7 @@ dependencies:
 - text >= 1.2
 - containers >= 0.6
 - strict >= 0.4
+- sort >= 1.0
 
 library:
   source-dirs: src
@@ -40,5 +41,6 @@ executables:
     - -with-rtsopts=-N
     - -O2
     - -Wall
+    - -Wno-tabs
     dependencies:
     - LeGit
