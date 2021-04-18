@@ -1,7 +1,10 @@
-module LeGit.Ignore (defaultIgnore , writeIgnores, getIgnores) where
+module LeGit.Ignore (defaultIgnore, writeIgnores, getIgnores, addIgnores, removeIgnores) where
 
 import LeGit.Basic
 import Text.JSON
+import System.FilePath
+import Data.List
+import Data.Function
 
 defaultIgnore :: JSValue
 defaultIgnore = JSArray []
@@ -24,10 +27,22 @@ filePathsToJson = showJSONs
 getIgnores :: Repo -> IO [FilePath]
 getIgnores = fmap jsonToFilePaths . readIgnores
 
--- showIgnore :: FilePath -> IO ()
--- showIgnore fp = findRepo fp >>= pom
---     where pom (Just r) = showRepoUserInfo r
---           pom Nothing  = putStr "Error :: "
---                       >> putStr fp 
---                       >> putStrLn " can't be shown: not a repository!"
---                       >> exitFailure
+insertFilePath :: [FilePath] -> FilePath -> [FilePath]
+insertFilePath [] fp = [fp]
+insertFilePath list@(x:xs) fp
+    | isParent x fp = list
+    | isParent fp x = fp : filter (not . isParent fp) xs
+    | otherwise     = x : insertFilePath xs fp
+    where isParent  = on isPrefixOf splitPath
+
+deleteFilePath :: [FilePath] -> FilePath -> [FilePath]
+deleteFilePath xs fp = filter (isNotParent fp) xs
+    where isNotParent  = fmap not . on isPrefixOf splitPath
+
+addIgnores :: Repo -> [FilePath] -> IO ()
+addIgnores rep fps = filePathsToJson . flip (foldl insertFilePath) fps <$> getIgnores rep >>= writeIgnores rep
+-- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
+
+removeIgnores :: Repo -> [FilePath] -> IO ()
+removeIgnores rep fps = filePathsToJson . flip (foldl deleteFilePath) fps <$> getIgnores rep >>= writeIgnores rep
+-- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
