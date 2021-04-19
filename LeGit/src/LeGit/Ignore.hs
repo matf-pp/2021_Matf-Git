@@ -40,16 +40,16 @@ deleteFilePath xs fp = filter (not . isParent fp) xs
 makeRelativeToBaseDir :: Repo -> FilePath -> FilePath
 makeRelativeToBaseDir r = makeRelative (baseDir r)
 
-addIgnoreToRepo :: Repo -> FilePath -> IO ()
-addIgnoreToRepo rep fp = filePathsToJson 
-                       . flip insertFilePath (makeRelativeToBaseDir rep fp) 
+absIgnoreRepo :: ([FilePath] -> FilePath -> [FilePath]) -> Repo -> FilePath -> IO ()
+absIgnoreRepo f rep fp = filePathsToJson 
+                       . flip f (makeRelativeToBaseDir rep fp) 
                      <$> getIgnores rep 
                      >>= writeIgnores rep
 -- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
 
+addIgnoreToRepo :: Repo -> FilePath -> IO ()
+addIgnoreToRepo = absIgnoreRepo insertFilePath
+
+
 removeIgnoreFromRepo :: Repo -> FilePath -> IO ()
-removeIgnoreFromRepo rep fp = filePathsToJson 
-                            . flip deleteFilePath (makeRelativeToBaseDir rep fp) 
-                          <$> getIgnores rep 
-                          >>= writeIgnores rep
--- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
+removeIgnoreFromRepo = absIgnoreRepo deleteFilePath
