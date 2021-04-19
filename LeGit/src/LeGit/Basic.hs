@@ -15,6 +15,8 @@ module LeGit.Basic (
     --JSON operations
     jsonExt, readJsonFromRepo, writeJsonToRepo,
 
+    --FilePath helper functions
+    cmpPath, sortPaths, isParent,
     --Utility
     (?)
 ) where
@@ -23,6 +25,9 @@ import System.FilePath
 import System.FilePath.Find
 import qualified System.IO.Strict as S
 import Text.JSON
+import Data.Sort
+import Data.Function
+import qualified Data.List as L
 
 -- Utility functions not based on Repo
 
@@ -95,3 +100,16 @@ readJsonFromRepo f d = fmap (pom . decode) . S.readFile . f
 
 writeJsonToRepo :: (Repo -> FilePath) -> Repo -> JSValue -> IO ()
 writeJsonToRepo f r = writeFile (f r) . encode
+
+cmpPath :: FilePath -> FilePath -> Ordering
+cmpPath = on pom (map dropTrailingPathSeparator . splitPath)
+        where pom (x:xs) (y:ys)
+                  | x == y = pom xs ys
+                  | otherwise = compare x y
+              pom a b = on compare null a b        
+
+sortPaths :: [FilePath] -> [FilePath]
+sortPaths = sortBy cmpPath
+
+isParent :: FilePath -> FilePath -> Bool
+isParent = on L.isPrefixOf (map dropTrailingPathSeparator . splitPath)

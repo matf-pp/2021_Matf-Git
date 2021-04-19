@@ -33,11 +33,9 @@ insertFilePath list@(x:xs) fp
     | isParent x fp = list
     | isParent fp x = fp : filter (not . isParent fp) xs
     | otherwise     = x : insertFilePath xs fp
-    where isParent  = on isPrefixOf (map dropTrailingPathSeparator . splitPath)
 
 deleteFilePath :: [FilePath] -> FilePath -> [FilePath]
-deleteFilePath xs fp = filter (isNotParent fp) xs
-    where isNotParent  = fmap not . on isPrefixOf (map dropTrailingPathSeparator . splitPath)
+deleteFilePath xs fp = filter (not . isParent fp) xs
 
 makeRelativeToBaseDir :: Repo -> FilePath -> FilePath
 makeRelativeToBaseDir r = makeRelative (baseDir r)
