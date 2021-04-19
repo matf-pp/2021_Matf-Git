@@ -73,7 +73,7 @@ fromRepoDir = fromBaseDir . dropFileName
 
 
 listRepos :: FilePath -> IO [Repo]
-listRepos fp = map fromRepoDir <$> find always isRepoDir fp 
+listRepos fp = map fromRepoDir <$> find (fileName /=? repoDirName) isRepoDir fp 
 
 hasRepos :: FilePath -> IO Bool
 hasRepos = fmap (not . null) . listRepos
