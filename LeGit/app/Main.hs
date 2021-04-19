@@ -12,9 +12,11 @@ directory dirStr = if null dirStr
 run :: Command -> IO ()
 run Greet = putStrLn "Hi!"
 run (Init d f) = directory d >>= flip LeGit.init f
-run (Set d args) = directory d >>= flip LeGit.setInfo (map pom args)
-    where pom (SetUserName u) = ("username", u)
-          pom (SetEmail e) = ("email", e)
+run (Set d args) = directory d >>= flip mapM_ args . pom
+    where pom r (SetUserName u) = LeGit.setUserName r u
+          pom r (SetEmail e) = LeGit.setEmail r e
+          pom r (AddIgnore fp) = makeAbsolute fp >>= LeGit.addIgnore r
+          pom r (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore r
 run (Print d arg) = directory d >>= pom arg
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores

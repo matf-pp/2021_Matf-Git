@@ -41,8 +41,8 @@ getInfo s = fmap (M.lookup s) . fmap jsonToRepoInfo . readInfo
 insertRepoInfo :: (String, String) -> RepoInfo -> RepoInfo
 insertRepoInfo = uncurry M.insert
 
-changeInfo :: [(String, String)] -> Repo ->  IO ()
-changeInfo ss r = (fmap jsonToRepoInfo (readInfo r)) >>= (writeInfo r . repoInfoToJson . flip (foldr insertRepoInfo) ss)
+changeInfo :: (String, String) -> Repo ->  IO ()
+changeInfo ss r = jsonToRepoInfo <$> readInfo r >>= writeInfo r . repoInfoToJson . insertRepoInfo ss
 
 
 

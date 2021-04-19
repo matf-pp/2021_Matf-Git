@@ -4,7 +4,6 @@ import LeGit.Basic
 import LeGit.Ignore
 import LeGit.Info
 
-import System.Directory
 import System.Exit
 import Data.Maybe
 

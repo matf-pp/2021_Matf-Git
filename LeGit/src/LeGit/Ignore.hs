@@ -1,4 +1,4 @@
-module LeGit.Ignore (defaultIgnore, writeIgnores, getIgnores, addIgnores, removeIgnores) where
+module LeGit.Ignore (defaultIgnore, writeIgnores, getIgnores, addIgnoreToRepo, removeIgnoreFromRepo) where
 
 import LeGit.Basic
 import Text.JSON
@@ -39,10 +39,19 @@ deleteFilePath :: [FilePath] -> FilePath -> [FilePath]
 deleteFilePath xs fp = filter (isNotParent fp) xs
     where isNotParent  = fmap not . on isPrefixOf splitPath
 
-addIgnores :: Repo -> [FilePath] -> IO ()
-addIgnores rep fps = filePathsToJson . flip (foldl insertFilePath) fps <$> getIgnores rep >>= writeIgnores rep
+makeRelativeToBaseDir :: Repo -> FilePath -> FilePath
+makeRelativeToBaseDir r = makeRelative (baseDir r)
+
+addIgnoreToRepo :: Repo -> FilePath -> IO ()
+addIgnoreToRepo rep fp = filePathsToJson 
+                       . flip insertFilePath (makeRelativeToBaseDir rep fp) 
+                     <$> getIgnores rep 
+                     >>= writeIgnores rep
 -- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
 
-removeIgnores :: Repo -> [FilePath] -> IO ()
-removeIgnores rep fps = filePathsToJson . flip (foldl deleteFilePath) fps <$> getIgnores rep >>= writeIgnores rep
+removeIgnoreFromRepo :: Repo -> FilePath -> IO ()
+removeIgnoreFromRepo rep fp = filePathsToJson 
+                            . flip deleteFilePath (makeRelativeToBaseDir rep fp) 
+                          <$> getIgnores rep 
+                          >>= writeIgnores rep
 -- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()

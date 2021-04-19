@@ -1,5 +1,5 @@
 module Command.Basic (
-    SetType(SetUserName, SetEmail), 
+    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore), 
     PrintType(PrintUserInfo, PrintIgnore), 
     Command(Greet, Init, Set, Print),
     optDir
@@ -9,6 +9,8 @@ import Options.Applicative
 
 data SetType = SetUserName String
              | SetEmail String
+             | AddIgnore FilePath
+             | RemoveIgnore FilePath
   deriving (Eq, Show)
   
 data PrintType = PrintUserInfo

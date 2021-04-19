@@ -41,6 +41,6 @@ executables:
     - -with-rtsopts=-N
     - -O2
     - -Wall
-    - -Wno-tabs
+    - -fno-warn-tabs
     dependencies:
     - LeGit

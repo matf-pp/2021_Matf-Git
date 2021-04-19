@@ -1,6 +1,6 @@
 module Command (
     --Types
-    SetType(SetUserName, SetEmail), 
+    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore), 
     PrintType(PrintUserInfo, PrintIgnore), 
     Command(Greet, Init, Set, Print),
 
