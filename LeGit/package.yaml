@@ -28,6 +28,7 @@ dependencies:
 - unordered-containers >= 0.2
 - strict >= 0.4
 - sort >= 1.0
+- time >= 1.9
 
 library:
   source-dirs: src

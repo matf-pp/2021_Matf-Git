@@ -20,7 +20,7 @@ module LeGit.Basic (
     --FilePath helper functions
     cmpPath, sortPaths, isParent,
     --Utility
-    (?), readFileLines, enumerate
+    (?), readFileLines, enumerate, getTimeString
 ) where
 
 import System.FilePath
@@ -32,6 +32,7 @@ import Data.Function
 import qualified Data.List as L
 import qualified Data.HashMap.Strict as M
 import Data.Maybe
+import Data.Time (getZonedTime)
 
 -- Utility functions not based on Repo
 
@@ -45,6 +46,9 @@ readFileLines = fmap lines . S.readFile
 
 enumerate :: [a] -> [(Int, a)]
 enumerate = zip [0..]
+
+getTimeString :: IO String
+getTimeString = takeWhile (/= '.') . show <$> getZonedTime
 
 -- Repo stuff
 

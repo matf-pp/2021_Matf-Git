@@ -1,4 +1,4 @@
-module LeGit.Info (changeInfo, getInfo, writeInfo, infoFields, defaultInfo) where
+module LeGit.Info (changeInfo, getInfo, writeInfo, infoFields, defaultInfo, getUserNameAssert) where
 
 import LeGit.Basic
 
@@ -40,6 +40,8 @@ changeInfo :: (String, String) -> Repo ->  IO ()
 changeInfo ss r = jsonToRepoInfo <$> readInfo r >>= writeInfo r . repoInfoToJson . insertRepoInfo ss
 
 
-
+getUserNameAssert :: Repo -> IO String
+getUserNameAssert = fmap (fromMaybe $ error "Error :: usenrame not set!") 
+                  . getInfo "username"
 
 --insertRepoInfo :: RepoInfo -> (String, String) -> RepoInfo

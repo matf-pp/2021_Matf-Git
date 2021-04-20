@@ -4,6 +4,7 @@ import Text.JSON
 import Crypto.Hash.SHA256
 import Text.Hex
 import Data.Function
+import Data.Maybe
 import System.Directory
 import qualified Data.Text as T
 import qualified Data.ByteString.UTF8 as B
@@ -11,8 +12,19 @@ import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import Control.Applicative ((<|>))
 
-
 import LeGit.Basic
+import LeGit.Info
+
+infoToJson :: Repo -> IO JSValue
+infoToJson r = do
+      u <- getUserNameAssert r
+      e <- getInfo "email" r
+      t <- getTimeString
+      let email = ([("email", fromMaybe undefined e)] ? []) $ isJust e
+      return $ JSObject $ toJSObject $ map (fmap (JSString . toJSString)) (("username", u):("time", t):email)
+
+infoFromJson :: JSValue -> Maybe (M.HashMap String String)
+infoFromJson = fmap (M.map $ fromMaybe undefined . takeJsonString) . takeJsonObject
 
 removesToJson :: [FilePath] -> JSValue
 removesToJson = stringsToJson
@@ -84,7 +96,6 @@ addsToJson = fmap JSArray . sequence . map addToJson
 addsFromJson :: JSValue -> Maybe [(FilePath,  Maybe [String])]
 addsFromJson js = takeJsonArray js >>= sequenceA . map addFromJson
 
---addFromJson :: JSValue -> Maybe [()]
 
 --readTree :: Repo -> IO JSValue
 --readTree = readJsonFromRepo treeFile JSNull

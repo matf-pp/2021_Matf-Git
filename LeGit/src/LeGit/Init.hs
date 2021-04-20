@@ -5,12 +5,10 @@ import LeGit.Ignore
 import LeGit.Info
 
 import System.Directory
-import System.Exit
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
 errorDirCheck cond dir msg =  cond dir
-            >>= (putStr "Error :: " >> putStr dir >> putStr " can't be initialized: " >> putStr msg 
-            >> putStrLn "!" >> exitFailure) ? return ()
+            >>= (error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")) ? return ()
 
 initRepo :: Repo -> IO ()
 initRepo r = mapM_ createDirectory (map ($r) directories)
