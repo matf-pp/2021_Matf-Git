@@ -3,8 +3,6 @@ module LeGit.Ignore (defaultIgnore, writeIgnores, getIgnores, addIgnoreToRepo, r
 import LeGit.Basic
 import Text.JSON
 import System.FilePath
-import Data.List
-import Data.Function
 
 defaultIgnore :: JSValue
 defaultIgnore = JSArray []
@@ -16,13 +14,10 @@ writeIgnores :: Repo -> JSValue -> IO ()
 writeIgnores = writeJsonToRepo ignoreFile
 
 jsonToFilePaths :: JSValue -> [FilePath]
-jsonToFilePaths (JSArray xs) = filter (not . null) $ map pom xs
-    where pom (JSString s) = fromJSString s
-          pom _ = ""
-jsonToFilePaths _ = []
+jsonToFilePaths = jsonToStrings
 
 filePathsToJson :: [FilePath] -> JSValue
-filePathsToJson = showJSONs
+filePathsToJson = stringsToJson
 
 getIgnores :: Repo -> IO [FilePath]
 getIgnores = fmap jsonToFilePaths . readIgnores

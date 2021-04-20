@@ -4,9 +4,9 @@ import LeGit.Basic
 
 import Text.JSON
 import Data.Maybe
-import qualified Data.Map as M
+import qualified Data.HashMap.Strict as M
 
-type RepoInfo = M.Map String String
+type RepoInfo = M.HashMap String String
 
 infoFields :: [String]
 infoFields = ["username", "email"]
@@ -21,16 +21,11 @@ writeInfo :: Repo -> JSValue -> IO ()
 writeInfo = writeJsonToRepo infoFile
 
 jsonToRepoInfo :: JSValue -> RepoInfo
-jsonToRepoInfo = M.fromList 
-               . map (fmap (fromMaybe undefined)) 
-               . filter (isJust . snd) 
-               . map (fmap pomMS) 
-               . pomRes 
-               . (decJSDict "" :: JSValue -> Result [(String, JSValue)])
-                where pomRes (Ok a) = a
-                      pomRes _      = []
-                      pomMS (JSString a) = Just $ fromJSString a
-                      pomMS _            = Nothing
+jsonToRepoInfo = M.map (fromMaybe undefined)
+               . M.filter isJust 
+               . M.map takeJsonString
+               . fromMaybe M.empty
+               . takeJsonObject
 
 repoInfoToJson :: RepoInfo -> JSValue
 repoInfoToJson = makeObj . map (fmap (JSString . toJSString)) . M.toList

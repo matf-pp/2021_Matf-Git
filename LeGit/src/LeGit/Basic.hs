@@ -14,11 +14,13 @@ module LeGit.Basic (
 
     --JSON operations
     jsonExt, readJsonFromRepo, writeJsonToRepo,
+    stringsToJson, jsonToStrings,
+    takeJsonString, takeJsonArray, takeJsonObject, takeJsonInt,
 
     --FilePath helper functions
     cmpPath, sortPaths, isParent,
     --Utility
-    (?)
+    (?), readFileLines, enumerate
 ) where
 
 import System.FilePath
@@ -28,6 +30,8 @@ import Text.JSON
 import Data.Sort
 import Data.Function
 import qualified Data.List as L
+import qualified Data.HashMap.Strict as M
+import Data.Maybe
 
 -- Utility functions not based on Repo
 
@@ -35,6 +39,12 @@ infixr 2 ?
 (?) :: a -> a -> Bool -> a 
 (?) x _ True  = x
 (?) _ y False = y
+
+readFileLines :: FilePath -> IO [String]
+readFileLines = fmap lines . S.readFile 
+
+enumerate :: [a] -> [(Int, a)]
+enumerate = zip [0..]
 
 -- Repo stuff
 
@@ -92,6 +102,23 @@ findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
 isRepo :: FilePath -> IO Bool
 isRepo = fmap (not . null) . findRepo
 
+--JSON Stuff
+
+takeJsonInt :: JSValue -> Maybe Int
+takeJsonInt (JSRational _ r) = Just $ floor r
+takeJsonInt _                = Nothing
+
+takeJsonString :: JSValue -> Maybe String
+takeJsonString (JSString s) = Just $ fromJSString s
+takeJsonString _            = Nothing
+
+takeJsonArray :: JSValue -> Maybe [JSValue]
+takeJsonArray (JSArray a) = Just $ a
+takeJsonArray _           = Nothing
+
+takeJsonObject :: JSValue -> Maybe (M.HashMap String JSValue)
+takeJsonObject (JSObject o) = Just $ M.fromList $ fromJSObject o
+takeJsonObject _            = Nothing
 
 readJsonFromRepo :: (Repo -> FilePath) -> JSValue -> Repo -> IO JSValue
 readJsonFromRepo f d = fmap (pom . decode) . S.readFile . f
@@ -100,6 +127,19 @@ readJsonFromRepo f d = fmap (pom . decode) . S.readFile . f
 
 writeJsonToRepo :: (Repo -> FilePath) -> Repo -> JSValue -> IO ()
 writeJsonToRepo f r = writeFile (f r) . encode
+
+stringsToJson :: [String] -> JSValue
+stringsToJson = JSArray . map (JSString . toJSString)
+
+jsonToStrings :: JSValue -> [String]
+jsonToStrings = map (fromMaybe undefined) 
+              . filter isJust 
+              . map takeJsonString 
+              . fromMaybe [] 
+              . takeJsonArray
+
+
+--FilePath Stuff
 
 cmpPath :: FilePath -> FilePath -> Ordering
 cmpPath = on pom (map dropTrailingPathSeparator . splitPath)
