@@ -27,7 +27,7 @@ infoFromJson :: JSValue -> Maybe (M.HashMap String String)
 infoFromJson = fmap (M.map $ fromMaybe undefined . takeJsonString) . takeJsonObject
 
 removesToJson :: [FilePath] -> JSValue
-removesToJson = stringsToJson
+removesToJson = stringsToJson        --TODO: minimise the list of FilePaths
 
 removesFromJson :: JSValue -> [FilePath]
 removesFromJson = jsonToStrings
@@ -96,6 +96,15 @@ addsToJson = fmap JSArray . sequence . map addToJson
 addsFromJson :: JSValue -> Maybe [(FilePath,  Maybe [String])]
 addsFromJson js = takeJsonArray js >>= sequenceA . map addFromJson
 
+fullDiffToJson :: Repo -> ([FilePath], [FilePath], [FilePath]) -> IO JSValue
+fullDiffToJson repo (r, c, a) = do
+      changes    <- changesToJson c
+      adds       <- addsToJson a
+      info       <- infoToJson repo
+      return $ JSObject $ toJSObject [ ("info", info)
+                                     , ("removes", removesToJson r)
+                                     , ("changes", changes)
+                                     , ("adds", adds)]
 
 --readTree :: Repo -> IO JSValue
 --readTree = readJsonFromRepo treeFile JSNull

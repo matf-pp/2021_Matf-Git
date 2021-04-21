@@ -4,7 +4,6 @@ import LeGit.Basic
 import LeGit.Ignore
 import LeGit.Info
 
-import System.Exit
 import Data.Maybe
 
 showErrorCheck :: (Repo -> IO ()) -> FilePath -> IO ()
