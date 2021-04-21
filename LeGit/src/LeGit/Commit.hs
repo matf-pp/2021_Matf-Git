@@ -1,13 +1,9 @@
-module LeGit.Commit (nameGen,readFileLines,makeDiff,makeFilePathDiff) where
+module LeGit.Commit (readFileLines,makeDiff,makeFilePathDiff) where
 
 import Text.JSON
-import Crypto.Hash.SHA256
-import Text.Hex
 import Data.Function
 import Data.Maybe
 import System.Directory
-import qualified Data.Text as T
-import qualified Data.ByteString.UTF8 as B
 import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import Control.Applicative ((<|>))
@@ -111,9 +107,6 @@ fullDiffToJson repo (r, c, a) = do
 --          
 --writeTree :: Repo -> JSValue -> IO () 
 --writeTree = writeJsonToRepo treeFile
-
-nameGen :: JSValue -> String
-nameGen = T.unpack . encodeHex . hash . B.fromString . Text.JSON.encode
 
 data Diff = Remove { removeIndex :: Int
                    , num :: Int
