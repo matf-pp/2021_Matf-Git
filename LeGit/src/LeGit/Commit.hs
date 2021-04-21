@@ -1,4 +1,4 @@
-module LeGit.Commit (readFileLines,makeDiff,makeFilePathDiff) where
+module LeGit.Commit (nameGen,readFileLines,makeDiff,makeFilePathDiff) where
 
 import Text.JSON
 import Data.Function
@@ -7,9 +7,21 @@ import System.Directory
 import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import Control.Applicative ((<|>))
+import System.FilePath.Find
+import System.FilePath
 
 import LeGit.Basic
 import LeGit.Info
+import LeGit.Ignore (getIgnores)
+
+initCommitJson :: IO JSValue
+initCommitJson = do
+        t <- getTimeString
+        let pom = JSObject $ toJSObject 
+                $ [("info",JSObject $ toJSObject [("time",JSString $ toJSString t)]),
+                ("adds",JSArray []), ("changes",JSArray []),("removes",JSArray [])]
+        return pom        
+        
 
 infoToJson :: Repo -> IO JSValue
 infoToJson r = do
@@ -23,7 +35,7 @@ infoFromJson :: JSValue -> Maybe (M.HashMap String String)
 infoFromJson = fmap (M.map $ fromMaybe undefined . takeJsonString) . takeJsonObject
 
 removesToJson :: [FilePath] -> JSValue
-removesToJson = stringsToJson        --TODO: minimise the list of FilePaths
+removesToJson = stringsToJson . reverse . sortPaths
 
 removesFromJson :: JSValue -> [FilePath]
 removesFromJson = jsonToStrings
@@ -133,4 +145,12 @@ makeFilePathDiff = fmap (foldl fja ([],[],[]))
                  . on D.getDiff sortPaths
                         where fja (x,y,z) (D.First n) = (n : x, y, z)
                               fja (x,y,z) (D.Both n _) = (x, n : y, z)
-                              fja (x,y,z) (D.Second n) = (x, y,n : z)                            
+                              fja (x,y,z) (D.Second n) = (x, y,n : z)                          
+                              
+genFilePaths :: Repo -> IO [FilePath]
+genFilePaths r = do
+        ignores <- map ((baseDir r) </>) <$> getIgnores r
+        let pom = fileName /=? repoDirName &&? fmap (not . flip elem ignores) filePath 
+        find pom pom $ baseDir r
+                
+                

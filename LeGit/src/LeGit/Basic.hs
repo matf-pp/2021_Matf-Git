@@ -1,7 +1,7 @@
 module LeGit.Basic (
     --Types and getters
     Repo, baseDir, repoDir, pointersDir, refsDir, tagsDir, headFile, 
-    objectsDir, commitsDir, treeFile, ignoreFile, infoFile,
+    objectsDir, commitsDir, treeFile, ignoreFile, infoFile, repoDirName,
 
     --Basic constructors
     fromBaseDir, 
@@ -106,6 +106,7 @@ findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
 isRepo :: FilePath -> IO Bool
 isRepo = fmap (not . null) . findRepo
 
+
 --JSON Stuff
 
 takeJsonInt :: JSValue -> Maybe Int
@@ -148,10 +149,12 @@ cmpPath = on pom (map dropTrailingPathSeparator . splitPath)
         where pom (x:xs) (y:ys)
                   | x == y = pom xs ys
                   | otherwise = compare x y
-              pom a b = on compare null a b        
+              pom a b = on compare null b a       
 
 sortPaths :: [FilePath] -> [FilePath]
 sortPaths = sortBy cmpPath
 
 isParent :: FilePath -> FilePath -> Bool
 isParent = on L.isPrefixOf (map dropTrailingPathSeparator . splitPath)
+
+
