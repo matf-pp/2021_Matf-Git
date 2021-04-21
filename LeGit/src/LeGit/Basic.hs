@@ -136,9 +136,7 @@ stringsToJson :: [String] -> JSValue
 stringsToJson = JSArray . map (JSString . toJSString)
 
 jsonToStrings :: JSValue -> [String]
-jsonToStrings = map (fromMaybe undefined) 
-              . filter isJust 
-              . map takeJsonString 
+jsonToStrings = mapMaybe takeJsonString 
               . fromMaybe [] 
               . takeJsonArray
 

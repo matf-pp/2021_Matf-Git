@@ -60,7 +60,7 @@ diffsToJson :: [Diff] -> JSValue
 diffsToJson = JSArray . map diffToJson
 
 diffsFromJson :: JSValue -> Maybe [Diff]
-diffsFromJson js = takeJsonArray js >>= sequenceA . map diffFromJson
+diffsFromJson js = takeJsonArray js >>= mapM diffFromJson
 
 changeToJson :: FilePath -> IO JSValue      --TODO
 changeToJson = undefined                    --TODO
@@ -75,7 +75,7 @@ changesToJson :: [FilePath] -> IO JSValue   --TODO
 changesToJson _ = return $ JSArray []       --TODO
 
 changesFromJson :: JSValue -> Maybe [(FilePath, [Diff])]
-changesFromJson js = takeJsonArray js >>= sequenceA . map changeFromJson
+changesFromJson js = takeJsonArray js >>= mapM changeFromJson
 
 addToJson :: FilePath -> IO JSValue
 addToJson fp = do
@@ -91,10 +91,10 @@ addFromJson js = takeJsonObject js >>= getAdd
             getAdd m      = flip (,) (getLines m) <$> getFilePath m
 
 addsToJson :: [FilePath] -> IO JSValue
-addsToJson = fmap JSArray . sequence . map addToJson
+addsToJson = fmap JSArray . mapM addToJson
 
 addsFromJson :: JSValue -> Maybe [(FilePath,  Maybe [String])]
-addsFromJson js = takeJsonArray js >>= sequenceA . map addFromJson
+addsFromJson js = takeJsonArray js >>= mapM addFromJson
 
 fullDiffToJson :: Repo -> ([FilePath], [FilePath], [FilePath]) -> IO JSValue
 fullDiffToJson repo (r, c, a) = do
