@@ -1,20 +1,21 @@
-module LeGit.Tree (shaToFP) where
+module LeGit.Tree () where
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text as T
-import qualified Data.ByteString.UTF8 as B
-import Crypto.Hash.SHA256
-import Text.Hex
-import System.FilePath
-import Text.JSON
-import Data.Maybe
 import LeGit.Basic
+
+import System.FilePath
+import Data.Maybe
+import Text.JSON (encode, JSValue)
+import Data.Text (unpack)
+import Text.Hex (encodeHex)
+import Crypto.Hash.SHA256 (hash)
+import Data.ByteString.UTF8 (fromString)
+import qualified Data.HashMap.Strict as M
 
 type Sha = String
 type Tree = M.HashMap Sha [Sha]
 
 shaGen :: JSValue -> String
-shaGen = T.unpack . encodeHex . hash . B.fromString . encode
+shaGen = unpack . encodeHex . hash . fromString . encode
 
 shaToFP :: Repo -> Sha -> FilePath
 shaToFP r s = jsonExt $ (commitsDir r) </> s
@@ -35,4 +36,4 @@ getPredecessors k m
     where par    = getParents k m !! 0
 
 insertNode :: Repo -> [Sha] -> JSValue -> IO ()
-insertNode r shas js = undefined
+insertNode = undefined

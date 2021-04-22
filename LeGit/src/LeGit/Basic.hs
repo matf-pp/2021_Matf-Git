@@ -2,6 +2,7 @@ module LeGit.Basic (
     --Types and getters
     Repo, baseDir, repoDir, pointersDir, refsDir, tagsDir, headFile, 
     objectsDir, commitsDir, treeFile, ignoreFile, infoFile, repoDirName,
+    Diff(Add,Remove),
 
     --Basic constructors
     fromBaseDir, 
@@ -12,27 +13,20 @@ module LeGit.Basic (
     findRepo,   --find the repository this path belongs to by checking if any parent is a repository
     isRepo,     --check if a path belongs to any repository
 
-    --JSON operations
-    jsonExt, readJsonFromRepo, writeJsonToRepo,
-    stringsToJson, jsonToStrings,
-    takeJsonString, takeJsonArray, takeJsonObject, takeJsonInt,
-
     --FilePath helper functions
-    cmpPath, sortPaths, isParent,
+    cmpPath, sortPaths, isParent, jsonExt,
+
     --Utility
     (?), readFileLines, enumerate, getTimeString
 ) where
 
 import System.FilePath
 import System.FilePath.Find
-import qualified System.IO.Strict as S
-import Text.JSON
 import Data.Sort
 import Data.Function
-import qualified Data.List as L
-import qualified Data.HashMap.Strict as M
-import Data.Maybe
 import Data.Time (getZonedTime)
+import qualified System.IO.Strict as S
+import qualified Data.List as L
 
 -- Utility functions not based on Repo
 
@@ -52,6 +46,15 @@ getTimeString = takeWhile (/= '.') . show <$> getZonedTime
 
 -- Repo stuff
 
+data Diff = Remove { 
+    removeIndex :: Int, 
+    num :: Int
+}         | Add { 
+    addIndex :: Int, 
+    addLines :: [String] 
+}
+    deriving(Show,Eq)
+
 data Repo = Repo {
     baseDir :: FilePath, 
         repoDir :: FilePath,
@@ -68,9 +71,6 @@ data Repo = Repo {
 
 repoDirName :: String
 repoDirName = ".LeGit"
-
-jsonExt :: FilePath -> FilePath
-jsonExt = (<.> "json")
 
 isRepoDir :: FindClause Bool
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
@@ -106,42 +106,6 @@ findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
 isRepo :: FilePath -> IO Bool
 isRepo = fmap (not . null) . findRepo
 
-
---JSON Stuff
-
-takeJsonInt :: JSValue -> Maybe Int
-takeJsonInt (JSRational _ r) = Just $ floor r
-takeJsonInt _                = Nothing
-
-takeJsonString :: JSValue -> Maybe String
-takeJsonString (JSString s) = Just $ fromJSString s
-takeJsonString _            = Nothing
-
-takeJsonArray :: JSValue -> Maybe [JSValue]
-takeJsonArray (JSArray a) = Just $ a
-takeJsonArray _           = Nothing
-
-takeJsonObject :: JSValue -> Maybe (M.HashMap String JSValue)
-takeJsonObject (JSObject o) = Just $ M.fromList $ fromJSObject o
-takeJsonObject _            = Nothing
-
-readJsonFromRepo :: (Repo -> FilePath) -> JSValue -> Repo -> IO JSValue
-readJsonFromRepo f d = fmap (pom . decode) . S.readFile . f
-                        where pom (Ok a) = a
-                              pom _      = d
-
-writeJsonToRepo :: (Repo -> FilePath) -> Repo -> JSValue -> IO ()
-writeJsonToRepo f r = writeFile (f r) . encode
-
-stringsToJson :: [String] -> JSValue
-stringsToJson = JSArray . map (JSString . toJSString)
-
-jsonToStrings :: JSValue -> [String]
-jsonToStrings = mapMaybe takeJsonString 
-              . fromMaybe [] 
-              . takeJsonArray
-
-
 --FilePath Stuff
 
 cmpPath :: FilePath -> FilePath -> Ordering
@@ -157,4 +121,5 @@ sortPaths = sortBy cmpPath
 isParent :: FilePath -> FilePath -> Bool
 isParent = on L.isPrefixOf (map dropTrailingPathSeparator . splitPath)
 
-
+jsonExt :: FilePath -> FilePath
+jsonExt = (<.> "json")
