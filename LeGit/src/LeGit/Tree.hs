@@ -18,22 +18,22 @@ shaGen :: JSValue -> String
 shaGen = unpack . encodeHex . hash . fromString . encode
 
 shaToFP :: Repo -> Sha -> FilePath
-shaToFP r s = jsonExt $ (commitsDir r) </> s
+shaToFP r = jsonExt . (commitsDir r </>)
 
 shaFromFP :: FilePath -> Sha
 shaFromFP = takeBaseName
 
 getParents :: Sha -> Tree -> [Sha]
-getParents k m = fromMaybe undefined (M.lookup k m)
+getParents = fmap (fromMaybe undefined) . M.lookup
 
 isRoot :: Sha -> Tree -> Bool
-isRoot k m = null (getParents k m)
+isRoot = fmap null . getParents
 
 getPredecessors :: Sha -> Tree -> [Sha]
 getPredecessors k m
     | isRoot k m = []
     | otherwise  = getPredecessors par m ++ [par]
-    where par    = getParents k m !! 0
+    where par    = head $ getParents k m
 
 insertNode :: Repo -> [Sha] -> JSValue -> IO ()
 insertNode = undefined

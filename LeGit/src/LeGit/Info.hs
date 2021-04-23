@@ -13,13 +13,13 @@ infoFields = ["username", "email"]
 
 
 getInfo :: String -> Repo -> IO (Maybe String)
-getInfo s = fmap (M.lookup s) . fmap jsonToRepoInfo . readInfo
+getInfo s = fmap (M.lookup s) . fmap  stringMapFromJson . readInfo
 
 insertRepoInfo :: (String, String) -> RepoInfo -> RepoInfo
 insertRepoInfo = uncurry M.insert
 
 changeInfo :: (String, String) -> Repo ->  IO ()
-changeInfo ss r = jsonToRepoInfo <$> readInfo r >>= writeInfo r . repoInfoToJson . insertRepoInfo ss
+changeInfo ss r = stringMapFromJson <$> readInfo r >>= writeInfo r .  stringMapToJson' . insertRepoInfo ss
 
 
 getUserNameAssert :: Repo -> IO String

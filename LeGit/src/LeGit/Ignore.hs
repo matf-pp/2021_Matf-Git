@@ -6,7 +6,7 @@ import LeGit.Json
 import System.FilePath
 
 getIgnores :: Repo -> IO [FilePath]
-getIgnores = fmap jsonToStrings . readIgnores
+getIgnores = fmap stringsFromJson . readIgnores
 
 insertFilePath :: [FilePath] -> FilePath -> [FilePath]
 insertFilePath [] fp = [fp]

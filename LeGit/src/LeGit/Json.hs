@@ -1,7 +1,7 @@
 module LeGit.Json (
     -- common
 
-    stringsToJson, jsonToStrings,
+    stringsToJson, stringsFromJson, stringMapToJson, stringMapToJson', stringMapFromJson,
 
     -- for Init
     initJson,
@@ -10,7 +10,7 @@ module LeGit.Json (
     readIgnores, writeIgnores,
 
     -- for Info
-    jsonToRepoInfo, repoInfoToJson, readInfo, writeInfo
+    readInfo, writeInfo
 ) where
 
 import LeGit.Basic
@@ -51,12 +51,23 @@ takeJsonObject _            = Nothing
 
 
 stringsToJson :: [String] -> JSValue
-stringsToJson = JSArray . map (JSString . toJSString)
+stringsToJson = showJSON
 
-jsonToStrings :: JSValue -> [String]
-jsonToStrings = mapMaybe takeJsonString
+stringsFromJson :: JSValue -> [String]
+stringsFromJson = mapMaybe takeJsonString
               . fromMaybe [] 
               . takeJsonArray
+
+stringMapFromJson :: JSValue -> M.HashMap String String
+stringMapFromJson = M.mapMaybe takeJsonString
+                  . fromMaybe M.empty
+                  . takeJsonObject
+
+stringMapToJson :: [(String, String)] -> JSValue
+stringMapToJson = makeObj . map (fmap showJSON)
+
+stringMapToJson' :: M.HashMap String String -> JSValue
+stringMapToJson' = stringMapToJson . M.toList
 
 -- Ignore Stuff
 
@@ -72,23 +83,13 @@ writeIgnores = writeJsonToRepo ignoreFile
 -- Info Stuff
 
 defaultInfo :: JSValue
-defaultInfo = JSObject $ toJSObject []
+defaultInfo = makeObj []
 
 readInfo :: Repo -> IO JSValue
 readInfo = readJsonFromRepo infoFile defaultInfo
 
 writeInfo :: Repo -> JSValue -> IO ()
 writeInfo = writeJsonToRepo infoFile
-
-jsonToRepoInfo :: JSValue -> M.HashMap String String
-jsonToRepoInfo = M.map (fromMaybe undefined)
-               . M.filter isJust 
-               . M.map takeJsonString
-               . fromMaybe M.empty
-               . takeJsonObject
-
-repoInfoToJson :: M.HashMap String String -> JSValue
-repoInfoToJson = makeObj . map (fmap (JSString . toJSString)) . M.toList
 
 -- Init Stuff
 
@@ -99,47 +100,32 @@ initJson r = writeIgnores r defaultIgnore
 -- Commit Stuff
 
 initCommitJson :: IO JSValue
-initCommitJson = do
-        t <- getTimeString
-        let pom = JSObject $ toJSObject 
-                $ [("info",JSObject $ toJSObject [("time",JSString $ toJSString t)]),
-                ("adds",JSArray []), ("changes",JSArray []),("removes",JSArray [])]
-        return pom
-
-infoToJson :: M.HashMap String String -> JSValue
-infoToJson = JSObject . toJSObject . M.toList . M.map (JSString . toJSString)
-
-infoFromJson :: JSValue -> Maybe (M.HashMap String String)
-infoFromJson = fmap (M.map $ fromMaybe undefined . takeJsonString) . takeJsonObject
+initCommitJson = flip fullDiffToJson ([],[],[]) . M.singleton "time" <$> getTimeString
 
 removesToJson :: [FilePath] -> JSValue
 removesToJson = stringsToJson . reverse . sortPaths
 
 removesFromJson :: JSValue -> [FilePath]
-removesFromJson = jsonToStrings
+removesFromJson = stringsFromJson
 
 diffToJson :: Diff -> JSValue
-diffToJson (Remove i n) = JSObject 
-                        $ toJSObject [("type", JSString $ toJSString "remove")
-                                     ,("index", JSRational True $ fromIntegral i)
-                                     ,("num", JSRational True $ fromIntegral n)
-                                     ]
-diffToJson (Add i ls)   = JSObject 
-                        $ toJSObject [("type", JSString $ toJSString "add")
-                                     ,("index", JSRational True $ fromIntegral i)
-                                     ,("lines", stringsToJson ls)
-                                     ]
+diffToJson (Remove i n) = makeObj [("type", showJSON "remove")
+                                  ,("index", showJSON i)
+                                  ,("num", showJSON n)]
+diffToJson (Add i ls)   = makeObj [("type", showJSON "add")
+                                  ,("index", showJSON i)
+                                  ,("lines", stringsToJson ls)]
 
 diffFromJson :: JSValue -> Maybe Diff
 diffFromJson js = takeJsonObject js >>= getDiff
       where getType m   = M.lookup "type" m  >>= takeJsonString
             getIndex m  = M.lookup "index" m >>= takeJsonInt
             getNum m    = M.lookup "num" m   >>= takeJsonInt
-            getLines    = fmap jsonToStrings . M.lookup "lines"
+            getLines    = fmap stringsFromJson . M.lookup "lines"
             isAdd       = fmap (== "add") . getType
             isRemove    = fmap (== "remove") . getType
-            getAdd m    = isAdd m >>= (Add <$> getIndex m <*> getLines m) ? Nothing
-            getRemove m = isRemove m >>= (Remove <$> getIndex m <*> getNum m) ? Nothing
+            getAdd m    = isAdd m >>= Add <$> getIndex m <*> getLines m ? Nothing
+            getRemove m = isRemove m >>= Remove <$> getIndex m <*> getNum m ? Nothing
             getDiff m   = getAdd m <|> getRemove m
 
 diffsToJson :: [Diff] -> JSValue
@@ -149,8 +135,7 @@ diffsFromJson :: JSValue -> Maybe [Diff]
 diffsFromJson js = takeJsonArray js >>= mapM diffFromJson
 
 changeToJson :: FilePath -> [Diff] -> JSValue
-changeToJson fp ds = JSObject $ toJSObject [("path", JSString $ toJSString fp)
-                                           ,("changes", diffsToJson ds)]
+changeToJson fp ds = makeObj [("path", showJSON fp), ("changes", diffsToJson ds)]
 
 changeFromJson :: JSValue -> Maybe (FilePath, [Diff])
 changeFromJson js = takeJsonObject js >>= getChanges
@@ -165,15 +150,13 @@ changesFromJson :: JSValue -> Maybe [(FilePath, [Diff])]
 changesFromJson js = takeJsonArray js >>= mapM changeFromJson
 
 addToJson :: FilePath -> Maybe [String] -> JSValue
-addToJson fp = JSObject 
-             . toJSObject 
-             . (:) ("path", JSString $ toJSString fp)
+addToJson fp = makeObj . (:) ("path", showJSON fp)
              . maybe [] (pure . (,) "lines" . stringsToJson)
 
 addFromJson :: JSValue -> Maybe (FilePath, Maybe [String])
 addFromJson js = takeJsonObject js >>= getAdd
       where getFilePath m = M.lookup "path" m >>= takeJsonString
-            getLines      = fmap jsonToStrings . M.lookup "lines"
+            getLines      = fmap stringsFromJson . M.lookup "lines"
             getAdd m      = flip (,) (getLines m) <$> getFilePath m
 
 addsToJson :: [(FilePath, Maybe [String])] -> JSValue
@@ -185,8 +168,7 @@ addsFromJson js = takeJsonArray js >>= mapM addFromJson
 fullDiffToJson :: M.HashMap String String 
                -> ([FilePath], [(FilePath, [Diff])], [(FilePath, Maybe [String])]) 
                -> JSValue
-fullDiffToJson i (r, c, a) = JSObject 
-                           $ toJSObject [ ("info", infoToJson i)
-                                        , ("removes", removesToJson r)
-                                        , ("changes", changesToJson c)
-                                        , ("adds", addsToJson a)]
+fullDiffToJson i (r, c, a) = makeObj [ ("info", stringMapToJson' i)
+                                     , ("removes", removesToJson r)
+                                     , ("changes", changesToJson c)
+                                     , ("adds", addsToJson a)]
