@@ -1,12 +1,11 @@
 module LeGit.Ignore (getIgnores, addIgnoreToRepo, removeIgnoreFromRepo) where
 
 import LeGit.Basic
-import LeGit.Json
 
 import System.FilePath
 
 getIgnores :: Repo -> IO [FilePath]
-getIgnores = fmap stringsFromJson . readIgnores
+getIgnores = readJsonFromRepo ignoreFile []
 
 insertFilePath :: [FilePath] -> FilePath -> [FilePath]
 insertFilePath [] fp = [fp]
@@ -22,10 +21,9 @@ makeRelativeToBaseDir :: Repo -> FilePath -> FilePath
 makeRelativeToBaseDir r = makeRelative (baseDir r)
 
 absIgnoreRepo :: ([FilePath] -> FilePath -> [FilePath]) -> Repo -> FilePath -> IO ()
-absIgnoreRepo f rep fp = stringsToJson 
-                       . flip f (makeRelativeToBaseDir rep fp) 
+absIgnoreRepo f rep fp = flip f (makeRelativeToBaseDir rep fp) 
                      <$> getIgnores rep 
-                     >>= writeIgnores rep
+                     >>= writeJsonToRepo ignoreFile rep
 -- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
 
 addIgnoreToRepo :: Repo -> FilePath -> IO ()

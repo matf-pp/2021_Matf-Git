@@ -1,7 +1,6 @@
 module LeGit.Init (LeGit.Init.init) where
 
 import LeGit.Basic
-import LeGit.Json (initJson)
 
 import System.Directory
 
@@ -10,7 +9,7 @@ errorDirCheck cond dir msg =  cond dir
             >>= (error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")) ? return ()
 
 initRepo :: Repo -> IO ()
-initRepo r = mapM_ createDirectory (map ($r) directories) >> initJson r
+initRepo r = mapM_ createDirectory (map ($r) directories)
             where directories = [repoDir, objectsDir, commitsDir]
 
 deleteRepo :: Repo -> IO ()
