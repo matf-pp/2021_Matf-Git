@@ -13,11 +13,10 @@ import qualified Data.HashMap.Strict as M
 
 makeCommitInfo :: Repo -> IO (M.HashMap String String)
 makeCommitInfo r = do
-      u <- getUserNameAssert r
-      e' <- getInfo "email" r
-      t <- getTimeString
-      let e = ([("email", fromMaybe undefined e')] ? []) $ isJust e'
-      return $ M.fromList $ ("username", u):("time", t):e
+      u <- (,) "username" <$> getUserNameAssert r
+      t <- (,) "time" <$> getTimeString
+      e <- map ((,) "email") . catMaybes . pure <$> getInfo "email" r
+      return $ M.fromList $ u : t : e
 
 makeDiff :: [String] -> [String] -> [Diff]
 makeDiff = fmap (map conv) 

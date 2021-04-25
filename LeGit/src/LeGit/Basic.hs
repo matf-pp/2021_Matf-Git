@@ -1,8 +1,9 @@
 module LeGit.Basic (
     --Types and getters
-    Repo, baseDir, repoDir, pointersDir, refsDir, tagsDir, headFile, 
-    objectsDir, commitsDir, treeFile, ignoreFile, infoFile, repoDirName,
+    Repo, baseDir, repoDir, pointersFile, infoFile, repoDirName,
+    objectsDir, commitsDir, treeFile, ignoreFile,
     Diff(Add,Remove),
+    Head(Ref,Tag,Sha),
 
     --Basic constructors
     fromBaseDir, 
@@ -24,6 +25,7 @@ import System.FilePath
 import System.FilePath.Find
 import Data.Sort
 import Data.Function
+import Text.JSON
 import Data.Time (getZonedTime)
 import qualified System.IO.Strict as S
 import qualified Data.List as L
@@ -55,36 +57,38 @@ data Diff = Remove {
 }
     deriving(Show,Eq)
 
+data Head = Ref { getRef :: String }
+          | Tag { getTag :: String }
+          | Sha { getSha :: String }
+    deriving(Show,Eq)
+
 data Repo = Repo {
     baseDir :: FilePath, 
         repoDir :: FilePath,
-            pointersDir :: FilePath,
-                refsDir :: FilePath,
-                tagsDir :: FilePath,
-                headFile :: FilePath,
             objectsDir :: FilePath,
                 commitsDir :: FilePath,
                 treeFile :: FilePath,
                 ignoreFile :: FilePath,
+                pointersFile :: FilePath,
             infoFile :: FilePath
 }
 
 repoDirName :: String
 repoDirName = ".LeGit"
 
+objectsDirName :: String
+objectsDirName = "objects"
+
 isRepoDir :: FindClause Bool
 isRepoDir = fileType ==? Directory &&? fileName ==? repoDirName
 
 fromBaseDir :: FilePath -> Repo
 fromBaseDir bd = Repo bd (bd </> repoDirName)
-                    (joinPath [bd, repoDirName, "pointers"])
-                    (joinPath [bd, repoDirName, "pointers", "refs"])
-                    (joinPath [bd, repoDirName, "pointers", "tags"])
-                    (jsonExt $ joinPath [bd, repoDirName, "pointers", "head"])
-                    (joinPath [bd, repoDirName, "objects"])
-                    (joinPath [bd, repoDirName, "objects", "commits"])
-                    (jsonExt $ joinPath [bd, repoDirName, "objects", "tree"])
-                    (jsonExt $ joinPath [bd, repoDirName, "objects", "ignore"])
+                    (joinPath [bd, repoDirName, objectsDirName])
+                    (joinPath [bd, repoDirName, objectsDirName, "commits"])
+                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "tree"])
+                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "ignore"])
+                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "pointers"])
                     (jsonExt $ joinPath [bd, repoDirName, "info"])
 
 fromRepoDir :: FilePath -> Repo

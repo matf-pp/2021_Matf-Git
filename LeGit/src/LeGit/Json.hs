@@ -1,6 +1,5 @@
 module LeGit.Json (
     -- common
-
     stringsToJson, stringsFromJson, stringMapToJson, stringMapToJson', stringMapFromJson,
 
     -- for Init
@@ -10,7 +9,10 @@ module LeGit.Json (
     readIgnores, writeIgnores,
 
     -- for Info
-    readInfo, writeInfo
+    readInfo, writeInfo,
+
+    -- for Tree
+    readTree, writeTree
 ) where
 
 import LeGit.Basic
@@ -96,6 +98,41 @@ writeInfo = writeJsonToRepo infoFile
 initJson :: Repo -> IO ()
 initJson r = writeIgnores r defaultIgnore
           >> writeInfo r defaultInfo
+
+-- Tree Stuff
+defaultTree :: JSValue
+defaultTree = makeObj []
+
+readTree :: Repo -> IO JSValue
+readTree = readJsonFromRepo treeFile defaultTree
+
+writeTree :: Repo -> JSValue -> IO ()
+writeTree = writeJsonToRepo treeFile
+
+-- Pointer Stuff
+
+defaultHead' :: Head
+defaultHead' = Ref "main"
+
+defaultHead :: JSValue
+defaultHead = headToJson defaultHead'
+
+headToJson :: Head -> JSValue
+headToJson (Ref p) = stringMapToJson [("type", "ref"), ("value", p)]
+headToJson (Tag p) = stringMapToJson [("type", "tag"), ("value", p)]
+headToJson (Sha p) = stringMapToJson [("type", "sha"), ("value", p)]
+
+headFromJson :: JSValue -> Maybe Head
+headFromJson js = takeJsonObject js >>= getPointer
+      where getPointer m = getRef m <|> getTag m <|> getSha m
+            getType m    = M.lookup "type" m   >>= takeJsonString
+            getValue m   = M.lookup "value" m  >>= takeJsonString
+            isRef        = fmap (== "ref") . getType
+            isTag        = fmap (== "tag") . getType
+            isSha        = fmap (== "Sha") . getType
+            getRef m     = isRef m >>= Ref <$> getValue m ? Nothing
+            getTag m     = isTag m >>= Tag <$> getValue m ? Nothing
+            getSha m     = isSha m >>= Sha <$> getValue m ? Nothing
 
 -- Commit Stuff
 

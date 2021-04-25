@@ -11,7 +11,7 @@ errorDirCheck cond dir msg =  cond dir
 
 initRepo :: Repo -> IO ()
 initRepo r = mapM_ createDirectory (map ($r) directories) >> initJson r
-            where directories = [repoDir, pointersDir, refsDir, tagsDir, objectsDir, commitsDir]
+            where directories = [repoDir, objectsDir, commitsDir]
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
@@ -19,10 +19,8 @@ deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRec
 initForce :: FilePath -> IO ()
 initForce fp = do
     listRepos fp >>= mapM_ deleteRepo
-    findRepo fp >>= deleteMaybeRepo
-    initRepo (fromBaseDir fp)
-        where deleteMaybeRepo Nothing  = return ()
-              deleteMaybeRepo (Just r) = deleteRepo r
+    findRepo fp >>= maybe (return ()) deleteRepo
+    initRepo $ fromBaseDir fp
 
 initSoft :: FilePath -> IO ()
 initSoft fp = errorDirCheck isRepo fp "already a repository"
