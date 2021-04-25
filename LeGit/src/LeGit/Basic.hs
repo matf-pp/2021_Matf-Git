@@ -5,8 +5,9 @@ module LeGit.Basic (
     Diff(Add,Remove),
     Contents(File,Dir),
     Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
+    ShaStr,
     Head(Ref,Tag,Sha),
-    Pointers, phead, refs, tags,
+    Pointers(Pointers), phead, refs, tags,
     
 
     --Functionality

@@ -11,48 +11,48 @@ import Crypto.Hash.SHA256 (hash)
 import Data.ByteString.UTF8 (fromString)
 import qualified Data.HashMap.Strict as M
 
-type Sha = String
-type Tree = M.HashMap Sha [Sha]
+type Tree = M.HashMap ShaStr [ShaStr]
 
 getTree :: Repo -> IO Tree
 getTree = readJsonFromRepo treeFile M.empty
 
-shaGen :: Commit -> Sha
+shaGen :: Commit -> ShaStr
 shaGen = unpack . encodeHex . hash . fromString . encode
 
-shaToFP :: Repo -> Sha -> FilePath
+shaToFP :: Repo -> ShaStr -> FilePath
 shaToFP r = jsonExt . (commitsDir r </>)
 
-shaFromFP :: FilePath -> Sha
-shaFromFP = takeBaseName
+--shaFromFP :: FilePath -> ShaStr
+--shaFromFP = takeBaseName
 
-getParents :: Sha -> Tree -> [Sha]
-getParents = fmap (fromMaybe undefined) . M.lookup
+getParents :: ShaStr -> Tree -> [ShaStr]
+getParents s = fromMaybe e . M.lookup s
+    where e = error $ "Internal Error :: Cannot find commit " ++ s
 
-isRoot :: Sha -> Tree -> Bool
+isRoot :: ShaStr -> Tree -> Bool
 isRoot = fmap null . getParents
 
-getPredecessorsSha' :: Sha -> Tree -> [Sha]
-getPredecessorsSha' k m
+getPredecessorsShaStr' :: ShaStr -> Tree -> [ShaStr]
+getPredecessorsShaStr' k m
     | isRoot k m = []
-    | otherwise  = par : getPredecessorsSha' par m
+    | otherwise  = par : getPredecessorsShaStr' par m
     where par    = head $ getParents k m
 
-getPredecessorsSha :: Sha -> Tree -> [Sha]
-getPredecessorsSha = fmap reverse . getPredecessorsSha'
+getPredecessorsShaStr :: ShaStr -> Tree -> [ShaStr]
+getPredecessorsShaStr = fmap reverse . getPredecessorsShaStr'
 
-getPred :: Sha -> Repo -> IO Commit
+getPred :: ShaStr -> Repo -> IO Commit
 getPred s = readJsonFromRepo (flip shaToFP s) (error $ "Internal Error :: Cannot find commit " ++ s)
 
-shaToShas :: Tree -> Sha -> [Sha]
-shaToShas t = flip getPredecessorsSha t
+shaStrToShaStrs :: Tree -> ShaStr -> [ShaStr]
+shaStrToShaStrs t = flip getPredecessorsShaStr t
 
-getPredecessors :: Repo -> Sha -> IO [Commit]
+getPredecessors :: Repo -> ShaStr -> IO [Commit]
 getPredecessors r s = do
     tree <- getTree r
-    mapM (flip getPred r) $ shaToShas tree s
+    mapM (flip getPred r) $ shaStrToShaStrs tree s
 
-insertNode :: Repo -> Commit -> [Sha] -> IO ()
+insertNode :: Repo -> Commit -> [ShaStr] -> IO ()
 insertNode r commit parents = do
     let sha = shaGen commit
     tree <- getTree r

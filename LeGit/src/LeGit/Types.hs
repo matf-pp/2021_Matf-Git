@@ -4,8 +4,9 @@ module LeGit.Types (
     Diff(Add,Remove),
     Contents(File,Dir),
     Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
+    ShaStr,
     Head(Ref,Tag,Sha),
-    Pointers, phead, refs, tags,
+    Pointers(Pointers), phead, refs, tags,
     jsonExt,
     (?) -- i like this operator very much
 ) where
@@ -104,9 +105,11 @@ instance JSON Commit where
                         <*> valFromObj "changes" m
                         <*> valFromObj "adds" m
 
+type ShaStr = String
+
 data Head = Ref { getRef :: String }
           | Tag { getTag :: String }
-          | Sha { getSha :: String }
+          | Sha { getSha :: ShaStr }
     deriving(Show,Eq)
 
 instance JSON Head where
@@ -126,8 +129,8 @@ instance JSON Head where
 
 data Pointers = Pointers {
     phead :: Head,
-    refs  :: M.HashMap String String,
-    tags  :: M.HashMap String String
+    refs  :: M.HashMap String ShaStr,
+    tags  :: M.HashMap String ShaStr
 }
 
 instance JSON Pointers where
