@@ -1,4 +1,4 @@
-module LeGit.Commit (readFileLines,makeDiff,makeFilePathDiff) where
+module LeGit.Commit (makeDiff,makeFilePathDiff) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -34,9 +34,33 @@ makeFilePathDiff = fmap (foldl fja ([],[],[]))
                         where fja (x,y,z) (D.First n) = (n : x, y, z)
                               fja (x,y,z) (D.Both n _) = (x, n : y, z)
                               fja (x,y,z) (D.Second n) = (x, y,n : z)                          
-                              
+                               
 genFilePaths :: Repo -> IO [FilePath]
 genFilePaths r = do
         ignores <- map ((baseDir r) </>) <$> getIgnores r
-        let pom = fileName /=? repoDirName &&? fmap (not . flip elem ignores) filePath 
+        let pom = fileName /=? repoDirName &&? fmap (not . flip elem ignores) filePath
         find pom pom $ baseDir r
+
+remove :: DirStruct -> Commit -> DirStruct
+remove acc = foldl remove' acc . commitRemoves
+        where remove' acc fp = M.delete fp acc
+        
+add :: DirStruct -> Commit -> DirStruct 
+add acc com = foldl add' acc (commitAdds com)
+        where add' acc (k,v) = M.insert k v acc 
+
+change :: DirStruct -> Commit -> DirStruct
+change acc = foldl change' acc . commitChanges
+        where change' acc (fp,difs) = M.insert fp (File (pom (getOld fp acc) difs)) acc
+              getOld = fmap (fromMaybe undefined) . M.lookup
+              pom (File old) = foldl pom' old
+              pom Dir = undefined
+              pom' old (Remove ind br) = take (ind-1) old ++ drop (ind + br) old
+              pom' old (Add ind s) = insertBetween s $ flip splitAt old $ ind-1
+              insertBetween s (l,r) = l ++ s ++ r
+              
+       
+reconstruct :: [Commit] -> DirStruct
+reconstruct = foldl (flip pom) M.empty 
+        where pom com = flip change com . flip add com . flip remove com 
+              

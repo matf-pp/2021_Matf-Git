@@ -3,6 +3,7 @@ module LeGit.Types (
     objectsDir, commitsDir, treeFile, ignoreFile, fromBaseDir, 
     Diff(Add,Remove),
     Contents(File,Dir),
+    DirStruct,
     Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
     Head(Ref,Tag,Sha),
     Pointers, phead, refs, tags,
@@ -84,6 +85,8 @@ instance JSON Contents where
                          then return Dir
                          else Error "Not a Contents"
               getFile  = fmap File . readJSON
+              
+type DirStruct = M.HashMap FilePath Contents
 
 data Commit = Commit { 
     commitInfo    :: M.HashMap String String, 

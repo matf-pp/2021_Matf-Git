@@ -4,6 +4,7 @@ module LeGit.Basic (
     objectsDir, commitsDir, treeFile, ignoreFile, fromBaseDir, 
     Diff(Add,Remove),
     Contents(File,Dir),
+    DirStruct,
     Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
     Head(Ref,Tag,Sha),
     Pointers, phead, refs, tags,
@@ -42,7 +43,7 @@ readFileLines :: FilePath -> IO [String]
 readFileLines = fmap lines . S.readFile 
 
 enumerate :: [a] -> [(Int, a)]
-enumerate = zip [0..]
+enumerate = zip [1..]
 
 getTimeString :: IO String
 getTimeString = takeWhile (/= '.') . show <$> getZonedTime
