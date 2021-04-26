@@ -1,45 +1,30 @@
 module LeGit.Types (
-    Repo, baseDir, repoDir, pointersFile, infoFile, repoDirName,
-    commitsDir, treeFile, ignoreFile, fromBaseDir, 
     Diff(Add,Remove),
     Contents(File,Dir),
     DirStruct,
     Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
     ShaStr,
     Head(Ref,Tag,Sha),
-    Pointers(Pointers), phead, refs, tags,
-    jsonExt,
-    (?) -- i like this operator very much
+    Pointers(Pointers), phead, refs, tags
 ) where
 
 import Text.JSON
-import System.FilePath
 import qualified Data.HashMap.Strict as M
 import qualified Data.Hashable as H
 import Control.Applicative ((<|>))
 
-infixr 2 ?
-(?) :: a -> a -> Bool -> a 
-(?) x _ True  = x
-(?) _ y False = y
+rerror :: String -> Result a
+rerror t = Error ("Failed to parse Json Object type " ++ t)
 
-repoDirName :: String
-repoDirName = ".LeGit"
+construct :: JSON a => String -> (JSObject JSValue -> Result a) -> JSObject JSValue -> Result a
+construct t f m = do
+    b <- fmap (== t) $ valFromObj "type" m
+    if b then f m else rerror t
 
-jsonExt :: FilePath -> FilePath
-jsonExt = (<.> "json")
-
-fromBaseDir :: FilePath -> Repo
-fromBaseDir bd = Repo bd (bd </> repoDirName)
-                    (joinPath [bd, repoDirName, "commits"])
-                    (jsonExt $ joinPath [bd, repoDirName, "tree"])
-                    (jsonExt $ joinPath [bd, repoDirName, "ignore"])
-                    (jsonExt $ joinPath [bd, repoDirName, "pointers"])
-                    (jsonExt $ joinPath [bd, repoDirName, "info"])
 
 instance (Eq k, H.Hashable k, JSKey k, JSON v) => JSON (M.HashMap k v) where
     showJSON = encJSDict . M.toList
-    readJSON = fmap M.fromList . decJSDict "Not a HashMap"
+    readJSON = fmap M.fromList . decJSDict "Failed to parse Json Object as HashMap"
 
 data Diff = Remove { 
     removeIndex :: Int, 
@@ -58,18 +43,11 @@ instance JSON Diff where
                                     ,("index", showJSON i)
                                     ,("lines", showJSONs ls)]
     readJSON js = readJSON js >>= getDiff
-        where getDiff m   = getAdd m <|> getRemove m
-              getType     = valFromObj "type"
-              getIndex    = valFromObj "index"
-              isAdd       = fmap (== "add") . getType
-              isRemove    = fmap (== "remove") . getType
-              getAdd m    = isAdd m 
-                        >>= Add <$> getIndex m <*> valFromObj "lines" m 
-                          ? Error "Not a Diff"
-              getRemove m = isRemove m 
-                        >>= Remove <$> getIndex m <*> valFromObj "num" m 
-                          ? Error "Not a Diff"
-
+        where getDiff m = getAdd m <|> getRemove m <|> rerror "Diff"
+              getAdd    = construct "add" add'
+              add' m    = Add <$> valFromObj "index" m <*> valFromObj "lines" m
+              getRemove = construct "remove" remove'
+              remove' m = Remove <$> valFromObj "index" m <*> valFromObj "num" m 
 
 data Contents = File [String] | Dir
     deriving Show
@@ -77,10 +55,9 @@ data Contents = File [String] | Dir
 instance JSON Contents where
     showJSON (File a) = showJSONs a
     showJSON Dir      = JSNull
-    readJSON js = getDir js <|> getFile js
-        where getDir v = if (v == JSNull) 
-                         then return Dir
-                         else Error "Not a Contents"
+    readJSON js = getFile js <|> getDir js
+        where getDir v = if (v == JSNull) then return Dir
+                         else rerror "Contents"
               getFile  = fmap File . readJSON
               
 type DirStruct = M.HashMap FilePath Contents
@@ -116,15 +93,13 @@ instance JSON Head where
     showJSON (Tag p) = encJSDict [("type", "tag"), ("value", p)]
     showJSON (Sha p) = encJSDict [("type", "sha"), ("value", p)]
     readJSON js = readJSON js >>= getHead
-        where getHead m = getRef m <|> getTag m <|> getSha m
-              getType   = valFromObj "type"
-              getVal    = valFromObj "value"
-              getRef m  = fmap (== "ref") (getType m) 
-                      >>= Ref <$> getVal m ? Error "Not a Head"
-              getTag m  = fmap (== "tag") (getType m) 
-                      >>= Tag <$> getVal m ? Error "Not a Head"
-              getSha m  = fmap (== "Sha") (getType m) 
-                      >>= Sha <$> getVal m ? Error "Not a Head"
+        where getHead m = getRef m <|> getTag m <|> getSha m <|> rerror "Head"
+              getRef    = construct "ref" ref'
+              ref' m    = Ref <$> valFromObj "value" m
+              getTag    = construct "tag" tag'
+              tag' m    = Tag <$> valFromObj "value" m
+              getSha    = construct "sha" sha'
+              sha' m    = Sha <$> valFromObj "value" m
 
 data Pointers = Pointers {
     phead :: Head,
@@ -141,13 +116,3 @@ instance JSON Pointers where
                           <$> valFromObj "head" m
                           <*> valFromObj "refs" m
                           <*> valFromObj "tags" m
-
-data Repo = Repo {
-    baseDir :: FilePath, 
-        repoDir :: FilePath,
-            commitsDir :: FilePath,
-            treeFile :: FilePath,
-            ignoreFile :: FilePath,
-            pointersFile :: FilePath,
-            infoFile :: FilePath
-}

@@ -39,6 +39,10 @@ import LeGit.Types
 
 -- Utility functions not based on Repo
 
+infixr 2 ?
+(?) :: a -> a -> Bool -> a 
+(?) x _ True  = x
+(?) _ y False = y
 
 readFileLines :: FilePath -> IO [String]
 readFileLines = fmap lines . S.readFile 
@@ -50,6 +54,27 @@ getTimeString :: IO String
 getTimeString = takeWhile (/= '.') . show <$> getZonedTime
 
 -- Repo stuff
+
+data Repo = Repo {
+    baseDir :: FilePath, 
+        repoDir :: FilePath,
+            commitsDir :: FilePath,
+            treeFile :: FilePath,
+            ignoreFile :: FilePath,
+            pointersFile :: FilePath,
+            infoFile :: FilePath
+}
+
+repoDirName :: String
+repoDirName = ".LeGit"
+
+fromBaseDir :: FilePath -> Repo
+fromBaseDir bd = Repo bd (bd </> repoDirName)
+                    (joinPath [bd, repoDirName, "commits"])
+                    (jsonExt $ joinPath [bd, repoDirName, "tree"])
+                    (jsonExt $ joinPath [bd, repoDirName, "ignore"])
+                    (jsonExt $ joinPath [bd, repoDirName, "pointers"])
+                    (jsonExt $ joinPath [bd, repoDirName, "info"])
 
 fromRepoDir :: FilePath -> Repo
 fromRepoDir = fromBaseDir . dropFileName
@@ -98,3 +123,6 @@ sortPaths = sortBy cmpPath
 
 isParent :: FilePath -> FilePath -> Bool
 isParent = on L.isPrefixOf (map dropTrailingPathSeparator . splitPath)
+
+jsonExt :: FilePath -> FilePath
+jsonExt = (<.> "json")

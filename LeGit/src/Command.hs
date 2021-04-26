@@ -16,7 +16,7 @@ import Command.Show
 import Options.Applicative
 
 optProgram :: Parser Command
-optProgram = subparser (
+optProgram = hsubparser (
               command "greet" (info (pure Greet) (progDesc "Print greeting"))
            <> commandInit
            <> commandSet
