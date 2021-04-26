@@ -43,15 +43,15 @@ genFilePaths r = do
 
 remove :: DirStruct -> Commit -> DirStruct
 remove acc = foldl remove' acc . commitRemoves
-        where remove' acc fp = M.delete fp acc
+        where remove' acc' fp = M.delete fp acc'
         
 add :: DirStruct -> Commit -> DirStruct 
 add acc com = foldl add' acc (commitAdds com)
-        where add' acc (k,v) = M.insert k v acc 
+        where add' acc' (k,v) = M.insert k v acc' 
 
 change :: DirStruct -> Commit -> DirStruct
-change acc = foldl change' acc . commitChanges
-        where change' acc (fp,difs) = M.insert fp (File (pom (getOld fp acc) difs)) acc
+change acc = foldl (flip change') acc . commitChanges
+        where change' (fp,difs) = M.insert fp $ File $ flip pom difs $ getOld fp acc
               getOld = fmap (fromMaybe undefined) . M.lookup
               pom (File old) = foldl pom' old
               pom Dir = undefined

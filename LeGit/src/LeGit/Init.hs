@@ -1,6 +1,7 @@
 module LeGit.Init (LeGit.Init.init) where
 
 import LeGit.Basic
+import LeGit.Tree (initTree)
 
 import System.Directory
 
@@ -9,8 +10,8 @@ errorDirCheck cond dir msg =  cond dir
             >>= (error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")) ? return ()
 
 initRepo :: Repo -> IO ()
-initRepo r = mapM_ createDirectory (map ($r) directories)
-            where directories = [repoDir, objectsDir, commitsDir]
+initRepo r = mapM_ createDirectory (map ($r) [repoDir, commitsDir])
+          >> initTree r
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)

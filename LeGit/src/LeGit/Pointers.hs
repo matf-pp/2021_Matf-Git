@@ -1,4 +1,4 @@
-module LeGit.Pointers () where
+module LeGit.Pointers (initPointers) where
 
 import LeGit.Basic
 import Data.Maybe
@@ -32,7 +32,7 @@ isCommitable (Ref _) = True
 isCommitable _       = False
 
 updateRef :: Pointers -> ShaStr -> Pointers
-updateRef p@(Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t
+updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t
 updateRef _ _ = error $ "Cannot update when Head is not reference"
 
 initPointers :: Repo -> ShaStr -> IO ()

@@ -1,6 +1,7 @@
-module LeGit.Tree (getPredecessors, insertNode) where
+module LeGit.Tree (initTree, getPredecessors, insertNode) where
 
 import LeGit.Basic
+import LeGit.Pointers
 
 import System.FilePath
 import Data.Maybe
@@ -52,9 +53,16 @@ getPredecessors r s = do
     tree <- getTree r
     mapM (flip getPred r) $ shaStrToShaStrs tree s
 
-insertNode :: Repo -> Commit -> [ShaStr] -> IO ()
+insertNode :: Repo -> Commit -> [ShaStr] -> IO ShaStr
 insertNode r commit parents = do
     let sha = shaGen commit
     tree <- getTree r
     writeJsonToRepo treeFile r $ M.insert sha parents tree
     writeJsonToRepo (flip shaToFP sha) r commit
+    return sha
+
+initTree :: Repo -> IO ()
+initTree r = do 
+    info  <- M.singleton "time" <$> getTimeString
+    let c = Commit info [] [] []
+    insertNode r c [] >>= initPointers r

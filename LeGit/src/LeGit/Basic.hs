@@ -1,11 +1,11 @@
 module LeGit.Basic (
     --Types and getters
     Repo, baseDir, repoDir, pointersFile, infoFile, repoDirName,
-    objectsDir, commitsDir, treeFile, ignoreFile, fromBaseDir, 
+    commitsDir, treeFile, ignoreFile, fromBaseDir, 
     Diff(Add,Remove),
     Contents(File,Dir),
     DirStruct,
-    Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
+    Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
     ShaStr,
     Head(Ref,Tag,Sha),
     Pointers(Pointers), phead, refs, tags,

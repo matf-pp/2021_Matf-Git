@@ -1,10 +1,10 @@
 module LeGit.Types (
     Repo, baseDir, repoDir, pointersFile, infoFile, repoDirName,
-    objectsDir, commitsDir, treeFile, ignoreFile, fromBaseDir, 
+    commitsDir, treeFile, ignoreFile, fromBaseDir, 
     Diff(Add,Remove),
     Contents(File,Dir),
     DirStruct,
-    Commit, commitInfo, commitRemoves, commitAdds, commitChanges,
+    Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
     ShaStr,
     Head(Ref,Tag,Sha),
     Pointers(Pointers), phead, refs, tags,
@@ -26,19 +26,15 @@ infixr 2 ?
 repoDirName :: String
 repoDirName = ".LeGit"
 
-objectsDirName :: String
-objectsDirName = "objects"
-
 jsonExt :: FilePath -> FilePath
 jsonExt = (<.> "json")
 
 fromBaseDir :: FilePath -> Repo
 fromBaseDir bd = Repo bd (bd </> repoDirName)
-                    (joinPath [bd, repoDirName, objectsDirName])
-                    (joinPath [bd, repoDirName, objectsDirName, "commits"])
-                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "tree"])
-                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "ignore"])
-                    (jsonExt $ joinPath [bd, repoDirName, objectsDirName, "pointers"])
+                    (joinPath [bd, repoDirName, "commits"])
+                    (jsonExt $ joinPath [bd, repoDirName, "tree"])
+                    (jsonExt $ joinPath [bd, repoDirName, "ignore"])
+                    (jsonExt $ joinPath [bd, repoDirName, "pointers"])
                     (jsonExt $ joinPath [bd, repoDirName, "info"])
 
 instance (Eq k, H.Hashable k, JSKey k, JSON v) => JSON (M.HashMap k v) where
@@ -110,9 +106,9 @@ instance JSON Commit where
 
 type ShaStr = String
 
-data Head = Ref { getRef :: String }
-          | Tag { getTag :: String }
-          | Sha { getSha :: ShaStr }
+data Head = Ref { ref :: String }
+          | Tag { tag :: String }
+          | Sha { sha :: ShaStr }
     deriving(Show,Eq)
 
 instance JSON Head where
@@ -149,10 +145,9 @@ instance JSON Pointers where
 data Repo = Repo {
     baseDir :: FilePath, 
         repoDir :: FilePath,
-            objectsDir :: FilePath,
-                commitsDir :: FilePath,
-                treeFile :: FilePath,
-                ignoreFile :: FilePath,
-                pointersFile :: FilePath,
+            commitsDir :: FilePath,
+            treeFile :: FilePath,
+            ignoreFile :: FilePath,
+            pointersFile :: FilePath,
             infoFile :: FilePath
 }
