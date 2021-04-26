@@ -23,9 +23,9 @@ addTag p@(Pointers _ r t) name = Pointers (Tag name) r newT
           newT   = M.insert name newSha t
 
 addRef :: Pointers -> String -> Pointers
-addRef p@(Pointers _ r t) name = Pointers (Ref name) r newT
+addRef p@(Pointers _ r t) name = Pointers (Ref name) newR t
     where newSha = getShaFromHead p
-          newT   = insert' name newSha t
+          newR   = insert' name newSha r
 
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
