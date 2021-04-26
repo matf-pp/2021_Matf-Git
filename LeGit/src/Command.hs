@@ -28,4 +28,4 @@ opts = info (optProgram <**> helper) (fullDesc
         <> header "LeGit - a SVC implemented in Haskell (somewhat based on git)" )
 
 execOpt :: IO Command
-execOpt = execParser opts
+execOpt = customExecParser (prefs showHelpOnEmpty) opts
