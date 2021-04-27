@@ -7,14 +7,14 @@ import System.Directory
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
 errorDirCheck cond dir msg =  cond dir
-            >>= (error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!")) ? return ()
+            >>= error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!") ? return ()
 
 initRepo :: Repo -> IO ()
-initRepo r = mapM_ createDirectory (map ($r) [repoDir, commitsDir])
+initRepo r = mapM_ (createDirectory . ($r)) [repoDir, commitsDir]
           >> initTree r
 
 deleteRepo :: Repo -> IO ()
-deleteRepo r = putStrLn ("Deleting repo: " ++ (baseDir r)) >> removeDirectoryRecursive (repoDir r)
+deleteRepo r = putStrLn ("Deleting repo: " ++ baseDir r) >> removeDirectoryRecursive (repoDir r)
 
 initForce :: FilePath -> IO ()
 initForce fp = do

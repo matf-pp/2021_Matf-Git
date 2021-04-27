@@ -43,22 +43,22 @@ getPredecessorsShaStr :: ShaStr -> Tree -> [ShaStr]
 getPredecessorsShaStr = fmap reverse . getPredecessorsShaStr'
 
 getPred :: ShaStr -> Repo -> IO Commit
-getPred s = readJsonFromRepo (flip shaToFP s) (error $ "Internal Error :: Cannot find commit " ++ s)
+getPred s = readJsonFromRepo (`shaToFP` s) (error $ "Internal Error :: Cannot find commit " ++ s)
 
 shaStrToShaStrs :: Tree -> ShaStr -> [ShaStr]
-shaStrToShaStrs t = flip getPredecessorsShaStr t
+shaStrToShaStrs = flip getPredecessorsShaStr
 
 getPredecessors :: Repo -> ShaStr -> IO [Commit]
 getPredecessors r s = do
     tree <- getTree r
-    mapM (flip getPred r) $ shaStrToShaStrs tree s
+    mapM (`getPred` r) $ shaStrToShaStrs tree s
 
 insertNode :: Repo -> Commit -> [ShaStr] -> IO ShaStr
 insertNode r commit parents = do
     let sha = shaGen commit
     tree <- getTree r
     writeJsonToRepo treeFile r $ M.insert sha parents tree
-    writeJsonToRepo (flip shaToFP sha) r commit
+    writeJsonToRepo (`shaToFP` sha) r commit
     return sha
 
 initTree :: Repo -> IO ()

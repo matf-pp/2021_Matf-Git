@@ -21,9 +21,9 @@ makeRelativeToBaseDir :: Repo -> FilePath -> FilePath
 makeRelativeToBaseDir r = makeRelative (baseDir r)
 
 absIgnoreRepo :: ([FilePath] -> FilePath -> [FilePath]) -> Repo -> FilePath -> IO ()
-absIgnoreRepo f rep fp = flip f (makeRelativeToBaseDir rep fp) 
-                     <$> getIgnores rep 
-                     >>= writeJsonToRepo ignoreFile rep
+absIgnoreRepo f rep fp = getIgnores rep 
+                     >>= writeJsonToRepo ignoreFile rep 
+                       . flip f (makeRelativeToBaseDir rep fp) 
 -- (>>=) :: ((<$>) :: ((.) :: [FilePath] -> JSValue) -> IO [FilePath]) -> IO JSValue) -> IO ()
 
 addIgnoreToRepo :: Repo -> FilePath -> IO ()

@@ -29,7 +29,7 @@ import System.FilePath
 import System.Directory
 import System.FilePath.Find
 import Data.Sort
-import Data.Function
+import Data.Function (on)
 import Text.JSON
 import Data.Time (getZonedTime)
 import qualified System.IO.Strict as S
@@ -101,9 +101,9 @@ hasRepos :: FilePath -> IO Bool
 hasRepos = fmap (not . null) . listRepos
 
 findRepo :: FilePath -> IO (Maybe Repo)
-findRepo = getRepo . reverse . (scanl1 (</>)) . splitPath
-                where getRepo (x:xs) = not . null <$> find (depth ==? 0) isRepoDir x
-                                   >>= (return . Just $ fromBaseDir x) ? getRepo xs
+findRepo = getRepo . reverse . scanl1 (</>) . splitPath
+                where getRepo (x:xs) = find (depth ==? 0) isRepoDir x
+                                   >>= ((return . Just $ fromBaseDir x) ? getRepo xs) . not . null
                       getRepo _ = return Nothing
 
 isRepo :: FilePath -> IO Bool

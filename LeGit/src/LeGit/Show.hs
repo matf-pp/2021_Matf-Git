@@ -12,11 +12,11 @@ showErrorCheck f fp = findRepo fp >>= pom
           pom Nothing  = error $ "Error :: " ++ fp ++ " can't be set: not a repository!"
 
 showInfo :: FilePath -> IO ()
-showInfo fp = showErrorCheck f fp
+showInfo = showErrorCheck f
     where f r = mapM_ (showSingleInfo r) infoFields
           showSingleInfo r s = putStr s >> putStr ": "
-                            >> (fmap (fromMaybe "Not set!") $ getInfo s r) >>= putStrLn
+                            >> fmap (fromMaybe "Not set!") (getInfo s r) >>= putStrLn
 
 showIgnores :: FilePath -> IO ()
-showIgnores fp = showErrorCheck f fp
+showIgnores = showErrorCheck f
     where f r = putStrLn "Ignores:" >> getIgnores r >>= mapM_ putStrLn

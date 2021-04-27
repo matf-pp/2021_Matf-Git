@@ -19,8 +19,8 @@ setEmail fp s = setErrorCheck f fp
 
 addIgnore :: FilePath -> FilePath -> IO ()
 addIgnore repo fp = setErrorCheck f repo
-      where f r = flip addIgnoreToRepo fp r
+      where f = flip addIgnoreToRepo fp
 
 removeIgnore :: FilePath -> FilePath -> IO ()
 removeIgnore repo fp = setErrorCheck f repo
-      where f r = flip removeIgnoreFromRepo fp r
+      where f = flip removeIgnoreFromRepo fp

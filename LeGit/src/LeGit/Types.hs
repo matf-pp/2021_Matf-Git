@@ -18,7 +18,7 @@ rerror t = Error ("Failed to parse Json Object type " ++ t)
 
 construct :: JSON a => String -> (JSObject JSValue -> Result a) -> JSObject JSValue -> Result a
 construct t f m = do
-    b <- fmap (== t) $ valFromObj "type" m
+    b <- (== t) <$> valFromObj "type" m
     if b then f m else rerror t
 
 
@@ -56,7 +56,7 @@ instance JSON Contents where
     showJSON (File a) = showJSONs a
     showJSON Dir      = JSNull
     readJSON js = getFile js <|> getDir js
-        where getDir v = if (v == JSNull) then return Dir
+        where getDir v = if v == JSNull then return Dir
                          else rerror "Contents"
               getFile  = fmap File . readJSON
               
