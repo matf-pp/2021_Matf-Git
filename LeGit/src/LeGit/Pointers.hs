@@ -14,7 +14,7 @@ getShaFromHead (Pointers (Tag h) _ t) = fromMaybe e $ M.lookup h t
 
 insert' :: (Eq k, Hashable k) => k -> v -> M.HashMap k v -> M.HashMap k v
 insert' k v m = pom $ M.lookup k m
-    where pom (Just _) = error $ "Element already exists"
+    where pom (Just _) = error "Element already exists"
           pom Nothing  = M.insert k v m
 
 addTag :: Pointers -> String -> Pointers
