@@ -33,7 +33,7 @@ isCommitable _       = False
 
 updateRef :: Pointers -> ShaStr -> Pointers
 updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t
-updateRef _ _ = error $ "Cannot update when Head is not reference"
+updateRef _ _ = error "Cannot update when Head is not reference"
 
 initPointers :: Repo -> ShaStr -> IO ()
 initPointers r s = writeJsonToRepo pointersFile r
