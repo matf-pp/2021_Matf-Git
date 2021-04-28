@@ -1,7 +1,6 @@
-module LeGit.Tree (initTree, getPredecessors, insertNode) where
+module LeGit.Tree (getPredecessors, insertNode) where
 
 import LeGit.Basic
-import LeGit.Pointers
 
 import System.FilePath
 import Data.Maybe
@@ -61,8 +60,3 @@ insertNode r commit parents = do
     writeJsonToRepo (`shaToFP` sha) r commit
     return sha
 
-initTree :: Repo -> IO ()
-initTree r = do 
-    info  <- M.singleton "time" <$> getTimeString
-    let c = Commit info [] [] []
-    insertNode r c [] >>= initPointers r
