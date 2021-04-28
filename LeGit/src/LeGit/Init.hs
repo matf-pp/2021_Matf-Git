@@ -1,7 +1,7 @@
 module LeGit.Init (LeGit.Init.init) where
 
 import LeGit.Basic
-import LeGit.Tree (initTree)
+import LeGit.Pointers (initState)
 
 import System.Directory
 
@@ -11,7 +11,7 @@ errorDirCheck cond dir msg =  cond dir
 
 initRepo :: Repo -> IO ()
 initRepo r = mapM_ (createDirectory . ($r)) [repoDir, commitsDir]
-          >> initTree r
+          >> initState r
 
 deleteRepo :: Repo -> IO ()
 deleteRepo r = putStrLn ("Deleting repo: " ++ baseDir r) >> removeDirectoryRecursive (repoDir r)

@@ -1,6 +1,8 @@
-module LeGit.Pointers (initPointers) where
+module LeGit.Pointers (initState) where
 
 import LeGit.Basic
+import LeGit.Tree
+
 import Data.Maybe
 import qualified Data.HashMap.Strict as M
 import Data.Hashable
@@ -35,6 +37,10 @@ updateRef :: Pointers -> ShaStr -> Pointers
 updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t
 updateRef _ _ = error "Cannot update when Head is not reference"
 
-initPointers :: Repo -> ShaStr -> IO ()
-initPointers r s = writeJsonToRepo pointersFile r
-                 $ Pointers (Ref "main") (M.singleton "main" s) M.empty
+initState :: Repo -> IO ()
+initState r = do 
+    info  <- M.singleton "time" <$> getTimeString
+    let c = Commit info [] [] []
+    insertNode r c [] >>= initPointers
+        where initPointers s =  writeJsonToRepo pointersFile r
+                             $ Pointers (Ref "main") (M.singleton "main" s) M.empty
