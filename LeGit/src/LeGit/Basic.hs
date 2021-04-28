@@ -17,6 +17,7 @@ module LeGit.Basic (
     findRepo,   --find the repository this path belongs to by checking if any parent is a repository
     isRepo,     --check if a path belongs to any repository
     readJsonFromRepo, writeJsonToRepo,
+    contentsToMaybe,
 
     --FilePath helper functions
     cmpPath, sortPaths, isParent, jsonExt,
@@ -108,6 +109,10 @@ findRepo = getRepo . reverse . scanl1 (</>) . splitPath
 
 isRepo :: FilePath -> IO Bool
 isRepo = fmap (not . null) . findRepo
+
+contentsToMaybe :: Contents -> Maybe [String]
+contentsToMaybe (File a) = Just a
+contentsToMaybe Dir = Nothing   
 
 --FilePath Stuff
 

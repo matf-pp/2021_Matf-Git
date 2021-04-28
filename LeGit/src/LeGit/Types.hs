@@ -50,7 +50,7 @@ instance JSON Diff where
               remove' m = Remove <$> valFromObj "index" m <*> valFromObj "num" m 
 
 data Contents = File [String] | Dir
-    deriving Show
+    deriving Show 
 
 instance JSON Contents where
     showJSON (File a) = showJSONs a

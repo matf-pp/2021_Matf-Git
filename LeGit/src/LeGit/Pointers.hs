@@ -1,4 +1,4 @@
-module LeGit.Pointers (initState) where
+module LeGit.Pointers (initState,writeCommit,getPredCommits) where
 
 import LeGit.Basic
 import LeGit.Tree

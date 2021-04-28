@@ -4,6 +4,7 @@ module LeGit.Commit (makeDiff,makeFilePathDiff) where
 import LeGit.Basic
 import LeGit.Info
 import LeGit.Ignore (getIgnores)
+import LeGit.Pointers
 
 import Data.Function
 import Data.Maybe
@@ -11,13 +12,14 @@ import System.FilePath
 import System.FilePath.Find
 import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
+import System.Directory
 
 makeCommitInfo :: Repo -> IO (M.HashMap String String)
 makeCommitInfo r = do
       u <- (,) "username" <$> getUserNameAssert r
       t <- (,) "time" <$> getTimeString
       e <- map ("email",) . catMaybes . pure <$> getInfo "email" r
-      return $ M.fromList $ u : t : e
+      return $ M.fromList $ u : t : e      
 
 makeDiff :: [String] -> [String] -> [Diff]
 makeDiff = fmap (map conv . filter f) . on (D.getGroupedDiffBy $ on (==) snd) enumerate
@@ -63,3 +65,36 @@ reconstruct :: [Commit] -> DirStruct
 reconstruct = foldl (flip pom) M.empty
         where pom com = flip change com . flip add com . flip remove com
 
+makeRemoveList :: [FilePath] -> [FilePath]
+makeRemoveList = reverse . sortPaths
+
+makeAddList :: [FilePath] -> IO [(FilePath,Contents)]
+makeAddList = mapM pom 
+        where pom fp = do
+                isF <- doesFileExist fp
+                if isF then fmap (fp,) $ fmap File $ readFileLines fp
+                       else pure (fp,Dir)
+                       
+makeChangeList :: DirStruct -> [FilePath] -> IO [(FilePath,[Diff])]
+makeChangeList rec p = do 
+        p' <- mapM getContents $ filter isFile p --[(FilePath,[String])]
+        pure $ filter (not . null . snd) $ map fja p'
+                where isFile fp = isJust $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec 
+                      getContents fp = fmap (fp,) $ readFileLines fp
+                      fja (fp,ls)  = (fp,makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) ls)
+                      
+                     
+commit :: Repo -> IO ()
+commit r = do
+        parents <- getPredCommits r --[Commit] 
+        let rec = reconstruct parents  --DirStruct
+        p <- genFilePaths r  --[FilePath]
+        let (l,b,d) = makeFilePathDiff p $ M.keys rec
+        let removeList = makeRemoveList l
+        addList <- makeAddList d
+        changeList <- makeChangeList rec b
+        info <- makeCommitInfo r
+        let com = Commit info removeList changeList addList
+        writeCommit r com
+                
+                        
