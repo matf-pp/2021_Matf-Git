@@ -70,19 +70,17 @@ makeRemoveList = reverse . sortPaths
 
 makeAddList :: [FilePath] -> IO [(FilePath,Contents)]
 makeAddList = mapM pom 
-        where pom fp = do
-                isF <- doesFileExist fp
-                if isF then fmap (fp,) $ fmap File $ readFileLines fp
-                       else pure (fp,Dir)
+        where pom fp = doesFileExist fp 
+                   >>= (fp,) . File <$>  readFileLines fp
+                     ? pure (fp,Dir)
                        
 makeChangeList :: DirStruct -> [FilePath] -> IO [(FilePath,[Diff])]
-makeChangeList rec p = do 
-        p' <- mapM getContents $ filter isFile p --[(FilePath,[String])]
-        pure $ filter (not . null . snd) $ map fja p'
-                where isFile fp = isJust $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec 
-                      getContents fp = (fp,) <$> readFileLines fp
-                      fja (fp,ls)  = (fp,makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) ls)
-                      
+makeChangeList rec p = filter (not . null . snd) . map fja
+                   <$> mapM getContents (filter isFile p)
+                        where isFile = isJust . found
+                              getContents fp = (fp,) <$> readFileLines fp
+                              fja (fp,ls)  = (fp, makeDiff (fromMaybe undefined $ found fp) ls)
+                              found = contentsToMaybe . fromMaybe undefined . flip M.lookup rec
                      
 commit :: Repo -> IO ()
 commit r = do
