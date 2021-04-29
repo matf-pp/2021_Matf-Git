@@ -2,7 +2,7 @@ module Command (
     --Types
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore), 
     PrintType(PrintUserInfo, PrintIgnore), 
-    Command(Greet, Init, Set, Print),
+    Command(Greet, Init, Set, Print, Commit),
 
     --Other
     execOpt
@@ -12,6 +12,7 @@ import Command.Basic
 import Command.Init
 import Command.Set
 import Command.Show
+import Command.Commit ( commandCommit )
 
 import Options.Applicative
 
@@ -21,6 +22,7 @@ optProgram = hsubparser (
            <> commandInit
            <> commandSet
            <> commandShow
+           <> commandCommit
          )
 
 opts :: ParserInfo Command

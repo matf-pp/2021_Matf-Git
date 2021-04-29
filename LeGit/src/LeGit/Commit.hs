@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (makeDiff,makeFilePathDiff) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -32,15 +32,15 @@ makeDiff = fmap (map conv . filter f) . on (D.getGroupedDiffBy $ on (==) snd) en
 makeFilePathDiff :: [FilePath] -> [FilePath] -> ([FilePath],[FilePath],[FilePath])
 makeFilePathDiff = fmap (foldl fja ([],[],[]))
                  . on D.getDiff sortPaths
-                        where fja (x,y,z) (D.First n) = (n : x, y, z)
+                        where fja (x,y,z) (D.First n) = (x, y,n : z)
                               fja (x,y,z) (D.Both n _) = (x, n : y, z)
-                              fja (x,y,z) (D.Second n) = (x, y,n : z)
+                              fja (x,y,z) (D.Second n) = (n : x, y, z)
 
 genFilePaths :: Repo -> IO [FilePath]
 genFilePaths r = do
         ignores <- map (baseDir r </>) <$> getIgnores r
         let pom = fileName /=? repoDirName &&? fmap (not . flip elem ignores) filePath
-        find pom pom $ baseDir r
+        find pom (pom &&? filePath /=? baseDir r) $ baseDir r
 
 remove :: DirStruct -> Commit -> DirStruct
 remove acc = foldl remove' acc . commitRemoves
@@ -80,12 +80,13 @@ makeChangeList rec p = do
         p' <- mapM getContents $ filter isFile p --[(FilePath,[String])]
         pure $ filter (not . null . snd) $ map fja p'
                 where isFile fp = isJust $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec 
-                      getContents fp = fmap (fp,) $ readFileLines fp
+                      getContents fp = (fp,) <$> readFileLines fp
                       fja (fp,ls)  = (fp,makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) ls)
                       
                      
 commit :: Repo -> IO ()
 commit r = do
+        info <- makeCommitInfo r
         parents <- getPredCommits r --[Commit] 
         let rec = reconstruct parents  --DirStruct
         p <- genFilePaths r  --[FilePath]
@@ -93,7 +94,6 @@ commit r = do
         let removeList = makeRemoveList l
         addList <- makeAddList d
         changeList <- makeChangeList rec b
-        info <- makeCommitInfo r
         let com = Commit info removeList changeList addList
         writeCommit r com
                 

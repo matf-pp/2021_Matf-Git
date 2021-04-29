@@ -7,7 +7,7 @@ import LeGit.Ignore
 setErrorCheck :: (Repo -> IO ()) -> FilePath -> IO ()
 setErrorCheck f fp = findRepo fp >>= pom
     where pom (Just r) = f r
-          pom Nothing  = error $ "Error :: " ++ fp ++ " can't be set: not a repository!"
+          pom Nothing  = errorMsg $ fp ++ " can't be set: not a repository"
 
 setUserName :: FilePath -> String -> IO ()
 setUserName fp s = setErrorCheck f fp

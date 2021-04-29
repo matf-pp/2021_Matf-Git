@@ -62,6 +62,7 @@ getPredCommits r = getShaFromRepo r >>= getPredecessors r
 writeCommit :: Repo -> Commit -> IO ()
 writeCommit r c = do
     p <- getPointers r
+    if isCommitable (phead p) then pure () else errorMsg "Cannot update when Head is not reference"
     let oldS = getShaFromHead p
     s <- insertNode r c [oldS]
     writeJsonToRepo pointersFile r $ updateRef p s

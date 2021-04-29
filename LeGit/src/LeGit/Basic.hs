@@ -23,9 +23,10 @@ module LeGit.Basic (
     cmpPath, sortPaths, isParent, jsonExt,
 
     --Utility
-    (?), readFileLines, enumerate, getTimeString
+    (?), readFileLines, enumerate, getTimeString, errorMsg
 ) where
 
+import System.Exit
 import System.FilePath
 import System.Directory
 import System.FilePath.Find
@@ -39,6 +40,9 @@ import qualified Data.List as L
 import LeGit.Types
 
 -- Utility functions not based on Repo
+
+errorMsg :: String -> IO ()
+errorMsg s = die ("Error :: " ++ s ++ "!")
 
 infixr 2 ?
 (?) :: a -> a -> Bool -> a 

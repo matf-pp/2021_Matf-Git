@@ -1,7 +1,7 @@
 module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore), 
-    PrintType(PrintUserInfo, PrintIgnore), 
-    Command(Greet, Init, Set, Print),
+    PrintType(PrintUserInfo, PrintIgnore),
+    Command(Greet, Init, Set, Print, Commit),
     optDir
 ) where
 
@@ -18,9 +18,10 @@ data PrintType = PrintUserInfo
   deriving (Eq, Show)
 
 data Command = Greet
-             | Init {directory :: String, force :: Bool}
-             | Set  {directory :: String, setArgs :: [SetType]}
-             | Print {directory :: String, printArg :: PrintType}
+             | Init {directory :: FilePath, force :: Bool}
+             | Set  {directory :: FilePath, setArgs :: [SetType]}
+             | Print {directory :: FilePath, printArg :: PrintType}
+             | Commit {directory :: FilePath, message :: String}
   deriving (Eq, Show)
 
 optDir :: Parser String

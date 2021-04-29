@@ -20,6 +20,7 @@ run (Set d args) = directory d >>= flip mapM_ args . pom
 run (Print d arg) = directory d >>= pom arg
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores
+run (Commit d _) = directory d >>= LeGit.commit
 
 main :: IO ()
 main = execOpt >>= run

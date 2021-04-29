@@ -34,8 +34,8 @@ isRoot = fmap null . getParents
 
 getPredecessorsShaStr' :: ShaStr -> Tree -> [ShaStr]
 getPredecessorsShaStr' k m
-    | isRoot k m = []
-    | otherwise  = par : getPredecessorsShaStr' par m
+    | isRoot k m = [k]
+    | otherwise  = k : getPredecessorsShaStr' par m
     where par    = head $ getParents k m
 
 getPredecessorsShaStr :: ShaStr -> Tree -> [ShaStr]

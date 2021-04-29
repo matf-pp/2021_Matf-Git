@@ -9,7 +9,7 @@ import Data.Maybe
 showErrorCheck :: (Repo -> IO ()) -> FilePath -> IO ()
 showErrorCheck f fp = findRepo fp >>= pom
     where pom (Just r) = f r
-          pom Nothing  = error $ "Error :: " ++ fp ++ " can't be set: not a repository!"
+          pom Nothing  = errorMsg $ fp ++ " can't be set: not a repository"
 
 showInfo :: FilePath -> IO ()
 showInfo = showErrorCheck f

@@ -25,7 +25,9 @@ changeInfo ss r = readInfo r
 
 
 getUserNameAssert :: Repo -> IO String
-getUserNameAssert = fmap (fromMaybe $ error "Error :: usenrame not set!") 
-                  . getInfo "username"
+getUserNameAssert r = do
+    i <- getInfo "username" r
+    if isJust i then return (fromMaybe undefined i)
+                else errorMsg "username not set" >> return ""
 
 --insertRepoInfo :: RepoInfo -> (String, String) -> RepoInfo

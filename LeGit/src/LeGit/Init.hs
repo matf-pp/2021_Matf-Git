@@ -7,7 +7,7 @@ import System.Directory
 
 errorDirCheck :: (FilePath -> IO Bool) -> FilePath -> String -> IO ()
 errorDirCheck cond dir msg =  cond dir
-            >>= error ("Error :: " ++ dir ++ " can't be initialized: " ++ msg ++ "!") ? return ()
+            >>= errorMsg (dir ++ " can't be initialized: " ++ msg) ? return ()
 
 initRepo :: Repo -> IO ()
 initRepo r = mapM_ (createDirectory . ($r)) [repoDir, commitsDir]
