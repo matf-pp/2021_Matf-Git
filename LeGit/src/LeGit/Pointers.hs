@@ -4,12 +4,39 @@ import LeGit.Basic
 import LeGit.Tree
 
 import Data.Maybe
+import Data.List
 import qualified Data.HashMap.Strict as M
 import Data.Hashable
 
+setHeadFromRef :: Repo -> String -> IO ()
+setHeadFromRef r refName = do
+    (Pointers _ refsMap tagsMap) <- getPointers r
+    if M.member refName refsMap then writePointers r (Pointers (Ref refName) refsMap tagsMap)
+                                else errorMsg $ "Ref " ++ refName ++ "does not exist"
+
+setHeadFromTag :: Repo -> String -> IO ()
+setHeadFromTag r tagName = do
+    (Pointers _ refsMap tagsMap) <- getPointers r
+    if M.member tagName tagsMap then writePointers r (Pointers (Tag tagName) refsMap tagsMap)
+                                else errorMsg $ "Tag " ++ tagName ++ "does not exist"
+
+setHeadFromSha :: Repo -> String -> IO ()
+setHeadFromSha r partialShaStr = do
+    shaStrs <- M.keys <$> getTree r
+    pom $ filter (isPrefixOf partialShaStr) shaStrs
+        where pom shas
+                |   null shas = errorMsg $ "String " ++ partialShaStr ++ " is not prefix of any existing sha"
+                |   length shas == 1 = do
+                        (Pointers _ refsMap tagsMap) <- getPointers r
+                        writePointers r (Pointers (Sha $ head shas) refsMap tagsMap)
+                |   otherwise = errorMsg $ "Multiple options: " ++ show shas
+    
 getPointers :: Repo -> IO Pointers
 getPointers = readJsonFromRepo pointersFile e
     where e = error "Internal Error :: Failed to parse Pointers file"
+
+writePointers :: Repo -> Pointers -> IO()
+writePointers = writeJsonToRepo pointersFile
 
 getShaFromHead :: Pointers -> ShaStr
 getShaFromHead (Pointers (Sha h) _ _) = h
@@ -49,7 +76,7 @@ initState r = do
     info  <- M.singleton "time" <$> getTimeString
     let c = Commit info [] [] []
     insertNode r c [] >>= initPointers
-        where initPointers s =  writeJsonToRepo pointersFile r
+        where initPointers s =  writePointers r
                              $ Pointers (Ref "main") (M.singleton "main" s) M.empty
 
 initPointers :: Repo -> ShaStr -> IO ()
@@ -65,4 +92,4 @@ writeCommit r c = do
     if isCommitable (phead p) then pure () else errorMsg "Cannot update when Head is not reference"
     let oldS = getShaFromHead p
     s <- insertNode r c [oldS]
-    writeJsonToRepo pointersFile r $ updateRef p s
+    writePointers r $ updateRef p s

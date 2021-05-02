@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -13,6 +13,7 @@ import System.FilePath.Find
 import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import System.Directory
+import Data.Sort
 
 makeCommitInfo :: Repo -> IO (M.HashMap String String)
 makeCommitInfo r = do
@@ -95,4 +96,17 @@ commit r = do
         let com = Commit info removeList changeList addList
         writeCommit r com
                 
-                        
+visit :: Repo -> IO ()
+visit r = do 
+        parents <- getPredCommits r --[Commit] 
+        let rec = reconstruct parents  --DirStruct
+        rmfps' <- genFilePaths r
+        let rmfps = reverse $ sortPaths $ rmfps'
+        mapM_ removePathForcibly rmfps
+        let fps = sort' $ M.toList rec
+        mapM_ create fps
+                where create (fp,(File con)) = writeFile fp $ unlines con
+                      create (fp,Dir) = createDirectory fp
+                      sort' = sortBy (on cmpPath fst)
+                      
+                      

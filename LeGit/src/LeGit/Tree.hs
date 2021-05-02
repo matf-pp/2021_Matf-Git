@@ -1,4 +1,4 @@
-module LeGit.Tree (getPredecessors, insertNode) where
+module LeGit.Tree (getTree, getPredecessors, insertNode) where
 
 import LeGit.Basic
 
