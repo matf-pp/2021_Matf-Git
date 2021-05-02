@@ -8,5 +8,5 @@ actionErrorCheck f fp = findRepo fp >>= pom
     where pom (Just r) = f r
           pom Nothing  = errorMsg $ "action on " ++ fp ++ " can't be done: not a repository"
 
-commit :: FilePath -> IO ()
-commit = actionErrorCheck LeGit.Commit.commit
+commit :: FilePath -> String -> IO ()
+commit fp msg = actionErrorCheck (flip LeGit.Commit.commit msg) fp
