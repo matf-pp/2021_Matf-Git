@@ -58,7 +58,7 @@ change acc = foldl (flip change') acc . commitChanges
               getOld = fmap (fromMaybe undefined) . M.lookup
               pom (File old) = foldl pom' old
               pom Dir = undefined
-              pom' old (Remove ind br) = take (ind-1) old ++ drop (ind + br) old
+              pom' old (Remove ind br) = take (ind-1) old ++ drop (ind -1 + br) old
               pom' old (Add ind s) = insertBetween s $ flip splitAt old $ ind-1
               insertBetween s (l,r) = l ++ s ++ r
 

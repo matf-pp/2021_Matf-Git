@@ -34,6 +34,12 @@ data Diff = Remove {
     addLines :: [String] 
 }
     deriving(Show,Eq)
+    
+instance Ord Diff where 
+        compare (Remove _ _) (Add _ _) = LT
+        compare (Add _ _) (Remove _ _) = GT
+        compare (Add i1 _) (Add i2 _) = compare i1 i2
+        compare (Remove i1 _) (Remove i2 _) = compare i1 i2
 
 instance JSON Diff where
     showJSON (Remove i n) = makeObj [("type", showJSON "remove")
