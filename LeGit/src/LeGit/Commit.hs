@@ -15,12 +15,13 @@ import qualified Data.HashMap.Strict as M
 import System.Directory
 import Data.Sort
 
-makeCommitInfo :: Repo -> IO (M.HashMap String String)
-makeCommitInfo r = do
+makeCommitInfo :: Repo -> String -> IO (M.HashMap String String)
+makeCommitInfo r msg = do
       u <- (,) "username" <$> getUserNameAssert r
       t <- (,) "time" <$> getTimeString
       e <- map ("email",) . catMaybes . pure <$> getInfo "email" r
-      return $ M.fromList $ u : t : e      
+      let m = (,) "message" msg
+      return $ M.fromList $ u : t : m : e     
 
 makeDiff :: [String] -> [String] -> [Diff]
 makeDiff = fmap (map conv . filter f) . on (D.getGroupedDiffBy $ on (==) snd) enumerate
@@ -83,9 +84,9 @@ makeChangeList rec p = filter (not . null . snd) . map fja
                               fja (fp,ls)  = (fp, makeDiff (fromMaybe undefined $ found fp) ls)
                               found = contentsToMaybe . fromMaybe undefined . flip M.lookup rec
                      
-commit :: Repo -> IO ()
-commit r = do
-        info <- makeCommitInfo r
+commit :: Repo -> String -> IO ()
+commit r msg = do
+        info <- makeCommitInfo r msg
         parents <- getPredCommits r --[Commit] 
         let rec = reconstruct parents  --DirStruct
         p <- genFilePaths r  --[FilePath]
