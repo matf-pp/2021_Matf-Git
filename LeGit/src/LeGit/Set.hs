@@ -3,6 +3,7 @@ module LeGit.Set (setUserName, setEmail, addIgnore, removeIgnore) where
 import LeGit.Basic
 import LeGit.Info
 import LeGit.Ignore
+import LeGit.Pointers
 
 setErrorCheck :: (Repo -> IO ()) -> FilePath -> IO ()
 setErrorCheck f fp = findRepo fp >>= pom

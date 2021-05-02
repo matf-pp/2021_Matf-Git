@@ -17,13 +17,16 @@ run (Set d args) = directory d >>= flip mapM_ args . pom
           pom r (SetEmail e) = LeGit.setEmail r e
           pom r (AddIgnore fp) = makeAbsolute fp >>= LeGit.addIgnore r
           pom r (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore r
-          pom r (AddRef name) = undefined
-          pom r (AddTag name) = undefined
+          pom _ (AddRef _) = undefined
+          pom _ (AddTag _) = undefined
 run (Print d arg) = directory d >>= pom arg
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores
 run (Commit d _) = directory d >>= LeGit.commit
-run (Visit d _) = directory d >>= undefined
+run (Visit d vt) = directory d >>= pom vt
+    where pom (VisitRef s) d' = LeGit.visitRef d' s
+          pom (VisitTag s) d' = LeGit.visitTag d' s
+          pom (VisitSha s) d' = LeGit.visitSha d' s
 
 main :: IO ()
 main = execOpt >>= run

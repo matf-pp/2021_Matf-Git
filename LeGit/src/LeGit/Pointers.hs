@@ -1,4 +1,7 @@
-module LeGit.Pointers (initState,writeCommit,getPredCommits) where
+module LeGit.Pointers (
+    initState, writeCommit, getPredCommits,
+    setHeadFromRef, setHeadFromTag, setHeadFromSha
+) where
 
 import LeGit.Basic
 import LeGit.Tree
