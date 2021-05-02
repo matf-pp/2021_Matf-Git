@@ -58,7 +58,7 @@ insert' k v m = pom $ M.lookup k m
           pom Nothing  = M.insert k v m
 
 addTag :: Pointers -> String -> Pointers
-addTag p@(Pointers _ r t) name = Pointers (Tag name) r newT
+addTag p@(Pointers h r t) name = Pointers h r newT
     where newSha = getShaFromHead p
           newT   = M.insert name newSha t
 
@@ -66,7 +66,7 @@ setTag :: Repo -> String -> IO ()
 setTag r tagName = do
     p <- getPointers r
     let newP = addTag p tagName
-    writePointers r p
+    writePointers r newP
 
 addRef :: Pointers -> String -> Pointers
 addRef p@(Pointers _ r t) name = Pointers (Ref name) newR t
@@ -77,7 +77,7 @@ setRef :: Repo -> String -> IO ()
 setRef r refName = do
     p <- getPointers r
     let newP = addRef p refName
-    writePointers r p
+    writePointers r newP
 
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
