@@ -1,4 +1,8 @@
-module LeGit.Set (setUserName, setEmail, addIgnore, removeIgnore) where
+module LeGit.Set (
+      setUserName, setEmail, 
+      addIgnore, removeIgnore,
+      addRef, addTag
+) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -25,3 +29,11 @@ addIgnore repo fp = setErrorCheck f repo
 removeIgnore :: FilePath -> FilePath -> IO ()
 removeIgnore repo fp = setErrorCheck f repo
       where f = flip removeIgnoreFromRepo fp
+
+addRef :: FilePath -> String -> IO ()
+addRef fp s = setErrorCheck pom fp
+      where pom r = setRef r s
+
+addTag :: FilePath -> String -> IO ()
+addTag fp s = setErrorCheck pom fp
+      where pom r = setTag r s

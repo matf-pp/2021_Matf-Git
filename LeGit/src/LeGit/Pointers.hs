@@ -1,6 +1,7 @@
 module LeGit.Pointers (
     initState, writeCommit, getPredCommits,
-    setHeadFromRef, setHeadFromTag, setHeadFromSha
+    setHeadFromRef, setHeadFromTag, setHeadFromSha,
+    setTag, setRef
 ) where
 
 import LeGit.Basic

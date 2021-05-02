@@ -17,8 +17,8 @@ run (Set d args) = directory d >>= flip mapM_ args . pom
           pom r (SetEmail e) = LeGit.setEmail r e
           pom r (AddIgnore fp) = makeAbsolute fp >>= LeGit.addIgnore r
           pom r (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore r
-          pom _ (AddRef _) = undefined
-          pom _ (AddTag _) = undefined
+          pom r (AddRef name) = LeGit.addRef r name
+          pom r (AddTag name) = LeGit.addTag r name
 run (Print d arg) = directory d >>= pom arg
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores
