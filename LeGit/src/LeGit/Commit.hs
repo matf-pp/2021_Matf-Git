@@ -56,10 +56,10 @@ change :: DirStruct -> Commit -> DirStruct
 change acc = foldl (flip change') acc . commitChanges
         where change' (fp,difs) = M.insert fp $ File $ flip pom difs $ getOld fp acc
               getOld = fmap (fromMaybe undefined) . M.lookup
-              pom (File old) = foldl pom' old
+              pom (File old) = fst . foldl pom' (old,0)
               pom Dir = undefined
-              pom' old (Remove ind br) = take (ind-1) old ++ drop (ind -1 + br) old
-              pom' old (Add ind s) = insertBetween s $ flip splitAt old $ ind-1
+              pom' (old,off) (Remove ind br) = (take (ind-1 + off) old ++ drop (ind -1 + br + off) old,off - br)
+              pom' (old,off) (Add ind s) = (insertBetween s $ flip splitAt old $ ind-1,off + length s)
               insertBetween s (l,r) = l ++ s ++ r
 
 
