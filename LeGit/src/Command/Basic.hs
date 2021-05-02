@@ -1,7 +1,8 @@
 module Command.Basic (
-    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore), 
+    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
     PrintType(PrintUserInfo, PrintIgnore),
-    Command(Greet, Init, Set, Print, Commit),
+    VisitType(VisitRef, VisitTag, VisitSha),
+    Command(Greet, Init, Set, Print, Commit, Visit),
     optDir
 ) where
 
@@ -11,10 +12,17 @@ data SetType = SetUserName String
              | SetEmail String
              | AddIgnore FilePath
              | RemoveIgnore FilePath
+             | AddRef String
+             | AddTag String
   deriving (Eq, Show)
   
 data PrintType = PrintUserInfo
                | PrintIgnore
+  deriving (Eq, Show)
+
+data VisitType = VisitRef {name :: String}
+               | VisitTag {name :: String}
+               | VisitSha {prefix :: String}
   deriving (Eq, Show)
 
 data Command = Greet
@@ -22,6 +30,7 @@ data Command = Greet
              | Set  {directory :: FilePath, setArgs :: [SetType]}
              | Print {directory :: FilePath, printArg :: PrintType}
              | Commit {directory :: FilePath, message :: String}
+             | Visit {directory :: FilePath, visitType :: VisitType}
   deriving (Eq, Show)
 
 optDir :: Parser String

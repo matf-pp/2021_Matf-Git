@@ -32,8 +32,28 @@ optRemoveIgnore = RemoveIgnore <$> strOption (
               <> help "Pass the filepath to be removed to the list of ignores"
               )
 
+optAddRef :: Parser SetType
+optAddRef = AddRef <$> strOption (
+            long "new-branch"
+            <> metavar "NEW_NAME"
+            <> help "Creates a new branch from the current head"
+            )
+
+optAddTag :: Parser SetType
+optAddTag = AddTag <$> strOption (
+            long "new-tag"
+            <> metavar "NEW_NAME"
+            <> help "Stores the current head as a tagged special commit"
+            )
+
 setOptions :: Parser Command
-setOptions = Set <$> optDir <*> some (optEmail <|> optUserName <|> optAddIgnore <|> optRemoveIgnore)
+setOptions = Set <$> optDir <*> some (    optEmail 
+                                      <|> optUserName 
+                                      <|> optAddIgnore 
+                                      <|> optRemoveIgnore 
+                                      <|> optAddRef 
+                                      <|> optAddTag
+                                        )
 
 commandSet :: Mod CommandFields Command
 commandSet = command "set" (info setOptions (progDesc "Sets repository specific information"))
