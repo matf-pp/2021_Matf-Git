@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -13,13 +13,15 @@ import System.FilePath.Find
 import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import System.Directory
+import Data.Sort
 
-makeCommitInfo :: Repo -> IO (M.HashMap String String)
-makeCommitInfo r = do
+makeCommitInfo :: Repo -> String -> IO (M.HashMap String String)
+makeCommitInfo r msg = do
       u <- (,) "username" <$> getUserNameAssert r
       t <- (,) "time" <$> getTimeString
       e <- map ("email",) . catMaybes . pure <$> getInfo "email" r
-      return $ M.fromList $ u : t : e      
+      let m = (,) "message" msg
+      return $ M.fromList $ u : t : m : e     
 
 makeDiff :: [String] -> [String] -> [Diff]
 makeDiff = fmap (map conv . filter f) . on (D.getGroupedDiffBy $ on (==) snd) enumerate
@@ -82,9 +84,9 @@ makeChangeList rec p = filter (not . null . snd) . map fja
                               fja (fp,ls)  = (fp, makeDiff (fromMaybe undefined $ found fp) ls)
                               found = contentsToMaybe . fromMaybe undefined . flip M.lookup rec
                      
-commit :: Repo -> IO ()
-commit r = do
-        info <- makeCommitInfo r
+commit :: Repo -> String -> IO ()
+commit r msg = do
+        info <- makeCommitInfo r msg
         parents <- getPredCommits r --[Commit] 
         let rec = reconstruct parents  --DirStruct
         p <- genFilePaths r  --[FilePath]
@@ -95,4 +97,17 @@ commit r = do
         let com = Commit info removeList changeList addList
         writeCommit r com
                 
-                        
+visit :: Repo -> IO ()
+visit r = do 
+        parents <- getPredCommits r --[Commit] 
+        let rec = reconstruct parents  --DirStruct
+        rmfps' <- genFilePaths r
+        let rmfps = reverse $ sortPaths $ rmfps'
+        mapM_ removePathForcibly rmfps
+        let fps = sort' $ M.toList rec
+        mapM_ create fps
+                where create (fp,(File con)) = writeFile fp $ unlines con
+                      create (fp,Dir) = createDirectory fp
+                      sort' = sortBy (on cmpPath fst)
+                      
+                      
