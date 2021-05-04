@@ -13,5 +13,7 @@ Korišćenje opcije `--help` ili `-h` nad programom izlistavaju se potprogrami k
 
 ## Autori
 Milica Živković 132/2018
+
 Miloš Petričković 55/2018
+
 Petar Đorđević 353/2020
