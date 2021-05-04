@@ -95,10 +95,6 @@ initState r = do
         where initPointers s =  writePointers r
                              $ Pointers (Ref "main") (M.singleton "main" s) M.empty
 
-initPointers :: Repo -> ShaStr -> IO ()
-initPointers r s = writeJsonToRepo pointersFile r
-                 $ Pointers (Ref "main") (M.singleton "main" s) M.empty
-
 getPredCommits :: Repo -> IO [Commit]
 getPredCommits r = getShaFromRepo r >>= getPredecessors r
 

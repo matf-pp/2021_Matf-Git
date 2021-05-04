@@ -78,9 +78,9 @@ makeAddList = mapM pom
                        
 makeChangeList :: DirStruct -> [FilePath] -> IO [(FilePath,[Diff])]
 makeChangeList rec p = filter (not . null . snd) . map fja
-                   <$> mapM getContents (filter isFile p)
+                   <$> mapM getContents' (filter isFile p)
                         where isFile = isJust . found
-                              getContents fp = (fp,) <$> readFileLines fp
+                              getContents' fp = (fp,) <$> readFileLines fp
                               fja (fp,ls)  = (fp, makeDiff (fromMaybe undefined $ found fp) ls)
                               found = contentsToMaybe . fromMaybe undefined . flip M.lookup rec
                      
