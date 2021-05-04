@@ -16,13 +16,13 @@ setHeadFromRef :: Repo -> String -> IO ()
 setHeadFromRef r refName = do
     (Pointers _ refsMap tagsMap) <- getPointers r
     if M.member refName refsMap then writePointers r (Pointers (Ref refName) refsMap tagsMap)
-                                else errorMsg $ "Ref " ++ refName ++ "does not exist"
+                                else errorMsg $ "Ref " ++ refName ++ " does not exist"
 
 setHeadFromTag :: Repo -> String -> IO ()
 setHeadFromTag r tagName = do
     (Pointers _ refsMap tagsMap) <- getPointers r
     if M.member tagName tagsMap then writePointers r (Pointers (Tag tagName) refsMap tagsMap)
-                                else errorMsg $ "Tag " ++ tagName ++ "does not exist"
+                                else errorMsg $ "Tag " ++ tagName ++ " does not exist"
 
 setHeadFromSha :: Repo -> String -> IO ()
 setHeadFromSha r partialShaStr = do
