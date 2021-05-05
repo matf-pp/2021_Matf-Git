@@ -17,10 +17,10 @@ import Data.Sort
 
 makeCommitInfo :: Repo -> String -> IO (M.HashMap String String)
 makeCommitInfo r msg = do
-      u <- (,) "username" <$> getUserNameAssert r
-      t <- (,) "time" <$> getTimeString
+      u <- ("username",) <$> getUserNameAssert r
+      t <- ("time",) <$> getTimeString
       e <- map ("email",) . catMaybes . pure <$> getInfo "email" r
-      let m = (,) "message" msg
+      let m = ("message", msg)
       return $ M.fromList $ u : t : m : e     
 
 makeDiff :: [String] -> [String] -> [Diff]
