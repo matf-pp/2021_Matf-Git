@@ -2,7 +2,7 @@ module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead),
     VisitType(VisitRef, VisitTag, VisitSha),
-    Command(Greet, Init, Set, Print, Commit, Visit),
+    Command(Init, Set, Print, Commit, Visit),
     optDir
 ) where
 
@@ -26,8 +26,7 @@ data VisitType = VisitRef {name :: String}
                | VisitSha {prefix :: String}
   deriving (Eq, Show)
 
-data Command = Greet
-             | Init {directory :: FilePath, force :: Bool}
+data Command = Init {directory :: FilePath, force :: Bool}
              | Set  {directory :: FilePath, setArgs :: [SetType]}
              | Print {directory :: FilePath, printArg :: PrintType}
              | Commit {directory :: FilePath, message :: String}

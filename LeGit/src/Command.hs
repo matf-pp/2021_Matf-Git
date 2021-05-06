@@ -3,7 +3,7 @@ module Command (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead), 
     VisitType(VisitRef, VisitTag, VisitSha),
-    Command(Greet, Init, Set, Print, Commit, Visit),
+    Command(Init, Set, Print, Commit, Visit),
 
     --Other
     execOpt
@@ -20,8 +20,7 @@ import Options.Applicative
 
 optProgram :: Parser Command
 optProgram = hsubparser (
-              command "greet" (info (pure Greet) (progDesc "Print greeting"))
-           <> commandInit
+              commandInit
            <> commandSet
            <> commandShow
            <> commandCommit

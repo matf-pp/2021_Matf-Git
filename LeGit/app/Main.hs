@@ -10,7 +10,6 @@ directory dirStr = if null dirStr
                      else makeAbsolute dirStr
 
 run :: Command -> IO ()
-run Greet = putStrLn "Hi!"
 run (Init d f) = directory d >>= flip LeGit.init f
 run (Set d args) = directory d >>= flip mapM_ args . pom
     where pom r (SetUserName u) = LeGit.setUserName r u
