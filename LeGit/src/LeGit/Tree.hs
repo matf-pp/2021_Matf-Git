@@ -11,8 +11,6 @@ import Crypto.Hash.SHA256 (hash)
 import Data.ByteString.UTF8 (fromString)
 import qualified Data.HashMap.Strict as M
 
-type Tree = M.HashMap ShaStr [ShaStr]
-
 getTree :: Repo -> IO Tree
 getTree = readJsonFromRepo treeFile M.empty
 

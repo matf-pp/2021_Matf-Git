@@ -1,8 +1,9 @@
-module LeGit.Show (showInfo, showIgnores) where
+module LeGit.Show (showInfo, showIgnores, showHead) where
 
 import LeGit.Basic
 import LeGit.Ignore
 import LeGit.Info
+import LeGit.Pointers
 
 import Data.Maybe
 
@@ -20,3 +21,7 @@ showInfo = showErrorCheck f
 showIgnores :: FilePath -> IO ()
 showIgnores = showErrorCheck f
     where f r = putStrLn "Ignores:" >> getIgnores r >>= mapM_ putStrLn
+
+showHead :: FilePath -> IO ()
+showHead = showErrorCheck f
+    where f r = getPointers r >>= print . phead

@@ -1,5 +1,5 @@
 module LeGit.Pointers (
-    initState, writeCommit, getPredCommits,
+    getPointers, initState, writeCommit, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha,
     setTag, setRef
 ) where

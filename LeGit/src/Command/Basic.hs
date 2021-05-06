@@ -1,6 +1,6 @@
 module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
-    PrintType(PrintUserInfo, PrintIgnore),
+    PrintType(PrintUserInfo, PrintIgnore, PrintHead),
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Greet, Init, Set, Print, Commit, Visit),
     optDir
@@ -18,6 +18,7 @@ data SetType = SetUserName String
   
 data PrintType = PrintUserInfo
                | PrintIgnore
+               | PrintHead
   deriving (Eq, Show)
 
 data VisitType = VisitRef {name :: String}

@@ -22,6 +22,7 @@ run (Set d args) = directory d >>= flip mapM_ args . pom
 run (Print d arg) = directory d >>= pom arg
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores
+          pom PrintHead = LeGit.showHead
 run (Commit d msg) = directory d >>= flip LeGit.commit msg
 run (Visit d vt) = directory d >>= pom vt
     where pom (VisitRef s) d' = LeGit.visitRef d' s

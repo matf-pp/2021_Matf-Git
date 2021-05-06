@@ -3,7 +3,7 @@ module LeGit.Types (
     Contents(File,Dir),
     DirStruct,
     Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
-    ShaStr,
+    ShaStr, Tree,
     Head(Ref,Tag,Sha),
     Pointers(Pointers), phead, refs, tags
 ) where
@@ -92,7 +92,12 @@ type ShaStr = String
 data Head = Ref { ref :: String }
           | Tag { tag :: String }
           | Sha { sha :: ShaStr }
-    deriving(Show,Eq)
+    deriving Eq
+
+instance Show Head where
+    show (Ref s) = "ref: " ++ s
+    show (Tag s) = "tag: " ++ s
+    show (Sha s) = "sha: " ++ s
 
 instance JSON Head where
     showJSON (Ref p) = encJSDict [("type", "ref"), ("value", p)]
@@ -122,3 +127,5 @@ instance JSON Pointers where
                           <$> valFromObj "head" m
                           <*> valFromObj "refs" m
                           <*> valFromObj "tags" m
+
+type Tree = M.HashMap ShaStr [ShaStr]

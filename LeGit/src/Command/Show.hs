@@ -15,8 +15,14 @@ optIgnore = flag' PrintIgnore (
              <> help "Prints ignored files and directories"
              )
 
+optHead :: Parser PrintType
+optHead = flag' PrintHead (
+             long "head"
+             <> help "Prints the current value of HEAD"
+             )
+
 showOptions :: Parser Command
-showOptions = Print <$> optDir <*> (optInfo <|> optIgnore)
+showOptions = Print <$> optDir <*> (optInfo <|> optIgnore <|> optHead)
 
 commandShow :: Mod CommandFields Command
 commandShow = command "show" (info showOptions (progDesc "Prints requested information"))

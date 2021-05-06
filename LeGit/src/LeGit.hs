@@ -1,14 +1,14 @@
 module LeGit (
-    LeGit.Init.init,
-    LeGit.Set.setUserName, LeGit.Set.setEmail, 
-    LeGit.Set.addIgnore, LeGit.Set.removeIgnore,
-    LeGit.Set.addRef, LeGit.Set.addTag,
-    LeGit.Show.showInfo, LeGit.Show.showIgnores,
-    LeGit.Action.commit,  
-    LeGit.Action.visitRef, LeGit.Action.visitTag, LeGit.Action.visitSha
+    Init.init,
+    Set.setUserName, Set.setEmail, 
+    Set.addIgnore, Set.removeIgnore,
+    Set.addRef, Set.addTag,
+    Show.showInfo, Show.showIgnores, Show.showHead,
+    Action.commit,  
+    Action.visitRef, Action.visitTag, Action.visitSha
 ) where
 
-import LeGit.Init
-import LeGit.Set
-import LeGit.Show
-import LeGit.Action
+import qualified LeGit.Init as Init
+import qualified LeGit.Set as Set
+import qualified LeGit.Show as Show
+import qualified LeGit.Action as Action

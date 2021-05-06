@@ -6,7 +6,7 @@ module LeGit.Basic (
     Contents(File,Dir),
     DirStruct,
     Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
-    ShaStr,
+    ShaStr, Tree,
     Head(Ref,Tag,Sha),
     Pointers(Pointers), phead, refs, tags,
     
