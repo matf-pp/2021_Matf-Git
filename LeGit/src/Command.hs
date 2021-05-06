@@ -4,7 +4,7 @@ module Command (
     PrintType(PrintUserInfo, PrintIgnore, PrintHead), 
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Init, Set, Print, Commit, Visit),
-
+    directory,
     --Other
     execOpt
 ) where

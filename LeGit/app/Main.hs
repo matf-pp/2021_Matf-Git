@@ -4,29 +4,31 @@ import Command
 
 import System.Directory
 
-directory :: String -> IO FilePath
-directory dirStr = if null dirStr
-                     then getCurrentDirectory
-                     else makeAbsolute dirStr
-
-run :: Command -> IO ()
-run (Init d f) = directory d >>= flip LeGit.init f
-run (Set d args) = directory d >>= flip mapM_ args . pom
-    where pom r (SetUserName u) = LeGit.setUserName r u
-          pom r (SetEmail e) = LeGit.setEmail r e
-          pom r (AddIgnore fp) = makeAbsolute fp >>= LeGit.addIgnore r
-          pom r (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore r
-          pom r (AddRef name) = LeGit.addRef r name
-          pom r (AddTag name) = LeGit.addTag r name
-run (Print d arg) = directory d >>= pom arg
+legit :: Command -> FilePath -> IO ()
+legit (Init _ f) d = LeGit.init d f
+legit (Commit _ msg) d = LeGit.commit d msg
+legit (Set _ args) d = mapM_ pom args
+    where pom (SetUserName u) = LeGit.setUserName d u
+          pom (SetEmail e) = LeGit.setEmail d e
+          pom (AddIgnore fp) = makeAbsolute fp >>= LeGit.addIgnore d
+          pom (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore d
+          pom (AddRef name) = LeGit.addRef d name
+          pom (AddTag name) = LeGit.addTag d name
+legit (Print _ arg) d = pom arg d
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore = LeGit.showIgnores
           pom PrintHead = LeGit.showHead
-run (Commit d msg) = directory d >>= flip LeGit.commit msg
-run (Visit d vt) = directory d >>= pom vt
-    where pom (VisitRef s) d' = LeGit.visitRef d' s
-          pom (VisitTag s) d' = LeGit.visitTag d' s
-          pom (VisitSha s) d' = LeGit.visitSha d' s
+legit (Visit _ vt) d = pom vt
+    where pom (VisitRef s) = LeGit.visitRef d s
+          pom (VisitTag s) = LeGit.visitTag d s
+          pom (VisitSha s) = LeGit.visitSha d s
+
+run :: Command -> IO ()
+run c = d >>= legit c
+    where d = if null dir
+              then getCurrentDirectory
+              else makeAbsolute dir
+          dir = directory c
 
 main :: IO ()
 main = execOpt >>= run

@@ -3,7 +3,7 @@ module Command.Basic (
     PrintType(PrintUserInfo, PrintIgnore, PrintHead),
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Init, Set, Print, Commit, Visit),
-    optDir
+    optDir, directory
 ) where
 
 import Options.Applicative
