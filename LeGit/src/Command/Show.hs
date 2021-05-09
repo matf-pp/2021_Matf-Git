@@ -9,6 +9,12 @@ optInfo = flag' PrintUserInfo (
              <> help "Prints user information"
              )
 
+optStatus :: Parser PrintType
+optStatus = flag' PrintStatus (
+             long "status"
+             <> help "Prints changes made compared to HEAD"
+             )
+
 optIgnore :: Parser PrintType
 optIgnore = flag' PrintIgnore (
              long "ignore"
@@ -22,7 +28,7 @@ optHead = flag' PrintHead (
              )
 
 showOptions :: Parser Command
-showOptions = Print <$> optDir <*> (optInfo <|> optIgnore <|> optHead)
+showOptions = Print <$> optDir <*> (optInfo <|> optIgnore <|> optHead <|> optStatus)
 
 commandShow :: Mod CommandFields Command
 commandShow = command "show" (info showOptions (progDesc "Prints requested information"))

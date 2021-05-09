@@ -14,10 +14,13 @@ legit (Set _ args) d = mapM_ pom args
           pom (RemoveIgnore fp) = makeAbsolute fp >>= LeGit.removeIgnore d
           pom (AddRef name)     = LeGit.addRef d name
           pom (AddTag name)     = LeGit.addTag d name
+          pom (RemoveRef name)  = LeGit.deleteRef d name
+          pom (RemoveTag name)  = LeGit.deleteTag d name
 legit (Print _ arg) d = pom arg d
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore   = LeGit.showIgnores
           pom PrintHead     = LeGit.showHead
+          pom PrintStatus   = LeGit.showStatus
 legit (Visit _ vt) d = pom vt
     where pom (VisitRef s) = LeGit.visitRef d s
           pom (VisitTag s) = LeGit.visitTag d s

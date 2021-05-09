@@ -1,7 +1,8 @@
 module LeGit.Set (
       setUserName, setEmail, 
       addIgnore, removeIgnore,
-      addRef, addTag
+      addRef, addTag,
+      deleteRef,  deleteTag
 ) where
 
 import LeGit.Basic
@@ -37,3 +38,11 @@ addRef fp s = setErrorCheck pom fp
 addTag :: FilePath -> String -> IO ()
 addTag fp s = setErrorCheck pom fp
       where pom r = setTag r s
+
+deleteRef :: FilePath -> String -> IO ()
+deleteRef fp s = setErrorCheck pom fp
+      where pom r = removeRef r s
+
+deleteTag :: FilePath -> String -> IO ()
+deleteTag fp s = setErrorCheck pom fp
+      where pom r = removeTag r s

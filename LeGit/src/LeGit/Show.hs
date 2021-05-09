@@ -1,9 +1,10 @@
-module LeGit.Show (showInfo, showIgnores, showHead) where
+module LeGit.Show (showInfo, showIgnores, showHead, showStatus) where
 
 import LeGit.Basic
 import LeGit.Ignore
 import LeGit.Info
 import LeGit.Pointers
+import LeGit.Commit (status)
 
 import Data.Maybe
 
@@ -25,3 +26,7 @@ showIgnores = showErrorCheck f
 showHead :: FilePath -> IO ()
 showHead = showErrorCheck f
     where f r = getPointers r >>= print . phead
+
+showStatus :: FilePath -> IO ()
+showStatus = showErrorCheck f
+    where f = status 

@@ -2,8 +2,8 @@ module LeGit (
     Init.init,
     Set.setUserName, Set.setEmail, 
     Set.addIgnore, Set.removeIgnore,
-    Set.addRef, Set.addTag,
-    Show.showInfo, Show.showIgnores, Show.showHead,
+    Set.addRef, Set.addTag, Set.deleteRef, Set.deleteTag,
+    Show.showInfo, Show.showIgnores, Show.showHead, Show.showStatus,
     Action.commit,  
     Action.visitRef, Action.visitTag, Action.visitSha,
     Action.garbageCollector
