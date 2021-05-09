@@ -2,7 +2,8 @@ module LeGit.Types (
     Diff(Add,Remove),
     Contents(File,Dir),
     DirStruct,
-    Commit(Commit), commitInfo, commitRemoves, commitAdds, commitChanges,
+    PureCommit(PureCommit), commitRemoves, commitAdds, commitChanges,
+    Commit(Commit), commitInfo, pureCommit,
     ShaStr, Tree,
     Head(Ref,Tag,Sha),
     Pointers(Pointers), phead, refs, tags
@@ -68,24 +69,30 @@ instance JSON Contents where
               
 type DirStruct = M.HashMap FilePath Contents
 
-data Commit = Commit { 
-    commitInfo    :: M.HashMap String String, 
+data PureCommit = PureCommit {
     commitRemoves :: [FilePath],
     commitChanges :: [(FilePath, [Diff])],
     commitAdds    :: [(FilePath, Contents)]
 }
 
+data Commit = Commit { 
+    commitInfo :: M.HashMap String String, 
+    pureCommit :: PureCommit
+}
+
 instance JSON Commit where
-    showJSON (Commit i r c a) = makeObj [("info", showJSON i)
-                                        ,("removes", showJSON r)
-                                        ,("changes", showJSON c)
-                                        ,("adds", showJSON a)]
+    showJSON (Commit i (PureCommit r c a)) = 
+                       makeObj [("info", showJSON i)
+                       ,("removes", showJSON r)
+                       ,("changes", showJSON c)
+                       ,("adds", showJSON a)]
     readJSON js = readJSON js >>= getCommit
         where getCommit m = Commit 
                         <$> valFromObj "info" m
-                        <*> valFromObj "removes" m
-                        <*> valFromObj "changes" m
-                        <*> valFromObj "adds" m
+                        <*> (PureCommit 
+                            <$> valFromObj "removes" m
+                            <*> valFromObj "changes" m
+                            <*> valFromObj "adds" m)
 
 type ShaStr = String
 

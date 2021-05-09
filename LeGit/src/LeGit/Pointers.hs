@@ -90,7 +90,7 @@ updateRef _ _ = error "Cannot update when Head is not reference"
 initState :: Repo -> IO ()
 initState r = do 
     info  <- M.singleton "time" <$> getTimeString
-    let c = Commit info [] [] []
+    let c = Commit info $ PureCommit [] [] []
     insertNode r c [] >>= initPointers
         where initPointers s =  writePointers r
                              $ Pointers (Ref "main") (M.singleton "main" s) M.empty
