@@ -1,11 +1,13 @@
 module LeGit.Action (
     LeGit.Action.commit,
-    visitRef, visitTag, visitSha
+    visitRef, visitTag, visitSha,
+    garbageCollector
 ) where
 
 import LeGit.Basic
 import LeGit.Pointers
 import LeGit.Commit
+import LeGit.GarbageCollector
 
 actionErrorCheck :: (Repo -> IO ()) -> FilePath -> IO ()
 actionErrorCheck f fp = findRepo fp >>= pom
@@ -32,3 +34,6 @@ visitSha fp s = actionErrorCheck pom fp
             where pom r = do
                     setHeadFromSha r s
                     visit r
+
+garbageCollector :: FilePath -> IO ()
+garbageCollector = actionErrorCheck gc

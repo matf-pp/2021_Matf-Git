@@ -22,6 +22,7 @@ legit (Visit _ vt) d = pom vt
     where pom (VisitRef s) = LeGit.visitRef d s
           pom (VisitTag s) = LeGit.visitTag d s
           pom (VisitSha s) = LeGit.visitSha d s
+legit (GarbageCollector _) d = LeGit.garbageCollector d
 
 run :: Command -> IO ()
 run c = d >>= legit c

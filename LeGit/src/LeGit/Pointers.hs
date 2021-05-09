@@ -1,7 +1,7 @@
 module LeGit.Pointers (
     getPointers, initState, writeCommit, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha,
-    setTag, setRef
+    setTag, setRef, isSha
 ) where
 
 import LeGit.Basic
@@ -82,6 +82,10 @@ setRef r refName = do
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
 isCommitable _       = False
+
+isSha :: Head -> Bool
+isSha (Sha _) = True
+isSha _       = False
 
 updateRef :: Pointers -> ShaStr -> Pointers
 updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t

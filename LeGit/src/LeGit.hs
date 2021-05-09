@@ -5,7 +5,8 @@ module LeGit (
     Set.addRef, Set.addTag,
     Show.showInfo, Show.showIgnores, Show.showHead,
     Action.commit,  
-    Action.visitRef, Action.visitTag, Action.visitSha
+    Action.visitRef, Action.visitTag, Action.visitSha,
+    Action.garbageCollector
 ) where
 
 import qualified LeGit.Init as Init

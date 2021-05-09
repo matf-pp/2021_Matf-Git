@@ -1,4 +1,4 @@
-module LeGit.Tree (getTree, getPredecessors, insertNode) where
+module LeGit.Tree (getTree, shaToFP, getPredecessors, insertNode, writeTree) where
 
 import LeGit.Basic
 
@@ -54,7 +54,9 @@ insertNode :: Repo -> Commit -> [ShaStr] -> IO ShaStr
 insertNode r commit parents = do
     let sha = shaGen commit
     tree <- getTree r
-    writeJsonToRepo treeFile r $ M.insert sha parents tree
+    writeTree r $ M.insert sha parents tree
     writeJsonToRepo (`shaToFP` sha) r commit
     return sha
 
+writeTree :: Repo -> Tree -> IO ()
+writeTree = writeJsonToRepo treeFile
