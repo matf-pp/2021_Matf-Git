@@ -1,7 +1,7 @@
 module Command (
     --Types
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
-    PrintType(PrintUserInfo, PrintIgnore, PrintHead), 
+    PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus), 
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Init, Set, Print, Commit, Visit, GarbageCollector),
     directory,

@@ -18,6 +18,7 @@ legit (Print _ arg) d = pom arg d
     where pom PrintUserInfo = LeGit.showInfo
           pom PrintIgnore   = LeGit.showIgnores
           pom PrintHead     = LeGit.showHead
+          pom PrintStatus   = LeGit.showStatus
 legit (Visit _ vt) d = pom vt
     where pom (VisitRef s) = LeGit.visitRef d s
           pom (VisitTag s) = LeGit.visitTag d s

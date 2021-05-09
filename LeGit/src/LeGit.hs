@@ -3,7 +3,7 @@ module LeGit (
     Set.setUserName, Set.setEmail, 
     Set.addIgnore, Set.removeIgnore,
     Set.addRef, Set.addTag,
-    Show.showInfo, Show.showIgnores, Show.showHead,
+    Show.showInfo, Show.showIgnores, Show.showHead, Show.showStatus,
     Action.commit,  
     Action.visitRef, Action.visitTag, Action.visitSha,
     Action.garbageCollector
