@@ -45,15 +45,15 @@ genFilePaths r = do
         find pom (pom &&? filePath /=? baseDir r) $ baseDir r
 
 remove :: DirStruct -> Commit -> DirStruct
-remove acc = foldl remove' acc . commitRemoves
+remove acc = foldl remove' acc . commitRemoves . pureCommit
         where remove' acc' fp = M.delete fp acc'
 
 add :: DirStruct -> Commit -> DirStruct
-add acc = foldl add' acc . commitAdds
+add acc = foldl add' acc . commitAdds . pureCommit
         where add' acc' (k,v) = M.insert k v acc'
 
 change :: DirStruct -> Commit -> DirStruct
-change acc = foldl (flip change') acc . commitChanges
+change acc = foldl (flip change') acc . commitChanges . pureCommit
         where change' (fp,difs) = M.insert fp $ File $ flip pom difs $ getOld fp acc
               getOld = fmap (fromMaybe undefined) . M.lookup
               pom (File old) = fst . foldl pom' (old,0)
@@ -63,9 +63,12 @@ change acc = foldl (flip change') acc . commitChanges
               insertBetween s (l,r) = l ++ s ++ r
 
 
-reconstruct :: [Commit] -> DirStruct
-reconstruct = foldl (flip pom) M.empty
+reconstruct' :: DirStruct -> [Commit] -> DirStruct
+reconstruct' = foldl (flip pom)
         where pom com = flip change com . flip add com . flip remove com
+        
+reconstruct :: [Commit] -> DirStruct
+reconstruct = reconstruct' M.empty      
 
 makeRemoveList :: [FilePath] -> [FilePath]
 makeRemoveList = reverse . sortPaths
@@ -94,7 +97,7 @@ commit r msg = do
         let removeList = makeRemoveList l
         addList <- makeAddList d
         changeList <- makeChangeList rec b
-        let com = Commit info removeList changeList addList
+        let com = Commit info $ PureCommit removeList changeList addList
         writeCommit r com
                 
 visit :: Repo -> IO ()
@@ -110,4 +113,4 @@ visit r = do
                       create (fp,Dir) = createDirectory fp
                       sort' = sortBy (on cmpPath fst)
                       
-                      
+--makeMergeCommit :: DirStruct ->                    
