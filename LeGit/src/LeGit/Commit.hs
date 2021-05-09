@@ -8,6 +8,7 @@ import LeGit.Pointers
 
 import Data.Function
 import Data.Maybe
+import Data.Either
 import System.FilePath
 import System.FilePath.Find
 import qualified Data.Algorithm.Diff as D
@@ -161,4 +162,24 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja
           conv (x,y,z,[]) = Right $ PureCommit x y z
           conv (_,_,_,err) = Left err
           join = fmap sort . (++)
-               
+             
+merge :: Repo -> String -> String -> IO ()
+merge r s msg = do
+          info <- makeCommitInfo r msg
+          (a,b,c) <- get3Lists r s
+          let parRec = reconstruct a
+          let bRec = reconstruct' parRec b
+          let cRec = reconstruct' parRec c
+          let (lb,bb,db) = on makeFilePathDiff M.keys parRec bRec
+          let (lc,bc,dc) = on makeFilePathDiff M.keys parRec bRec
+          let rb = makeRemoveList lb
+          cb <- makeChangeList parRec bb
+          ab <- makeAddList db
+          let rc = makeRemoveList lc
+          cc <- makeChangeList parRec bc
+          ac <- makeAddList dc
+          let blists = PureCommit rb cb ab         
+          let clists = PureCommit rc cc ac
+          let rez = makeMergeCommit parRec blists clists
+          if isRight rez then writeMerge r s (Commit info (fromRight undefined rez))
+                         else mapM_ putStrLn (fromLeft undefined rez)
