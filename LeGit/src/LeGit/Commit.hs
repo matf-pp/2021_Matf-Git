@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -99,6 +99,15 @@ commit r msg = do
         changeList <- makeChangeList rec b
         let com = Commit info $ PureCommit removeList changeList addList
         writeCommit r com
+        
+status :: Repo -> IO ()
+status r = do
+        parents <- getPredCommits r --[Commit] 
+        let rec = reconstruct parents  --DirStruct
+        p <- genFilePaths r  --[FilePath]
+        let (l,b,d) = makeFilePathDiff p $ M.keys rec
+        let mapt s = (:) s . map ("\t" ++) 
+        mapM_ putStrLn $ mapt "removed:" l ++ mapt "changed:" b ++ mapt "added:" d         
                 
 visit :: Repo -> IO ()
 visit r = do 
@@ -112,5 +121,44 @@ visit r = do
                 where create (fp,(File con)) = writeFile fp $ unlines con
                       create (fp,Dir) = createDirectory fp
                       sort' = sortBy (on cmpPath fst)
+                 
+isMergeable :: [Diff] -> [Diff] -> Bool
+isMergeable l r = foldr fja True l
+    where fja d1 acc = if fst (foldr pom (True,d1) r) then acc && True else False
+          pom d2 (acc,d1) = (pom' acc d1 d2,d1)
+          pom' acc (Remove i1 c1) (Remove i2 c2) = pom'' acc i1 c1 i2 c2
+          pom' acc (Remove i1 c1) (Add i2 c2) = pom'' acc i1 c1 i2 (length c2)
+          pom' acc (Add i1 c1) (Remove i2 c2) = pom'' acc i1 (length c1) i2 c2
+          pom' acc (Add i1 c1) (Add i2 c2) = pom'' acc i1 (length c1) i2 (length c2)
+          pom'' acc i1 c1 i2 c2
+            | i1 < i2 && i1+c1 > i2 = False
+            | i1 < i2 && i1+c1 <= i2 = acc && True
+            | i1 > i2 && i2+c2 <= i1 = acc && True
+            | i1 > i2 && i2+c2 > i1 = False
+            | otherwise = False 
+            
                       
---makeMergeCommit :: DirStruct ->                    
+makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
+makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) (M.toList p)
+    where fja (r,c,a,x) (fp,_)
+            | elem fp r1 && elem fp r2 = (r ++ [fp],c,a,x)
+            | elem fp r1 && isIn fp c2 = (r,c ++ [(fp,get fp c2)],a,x)
+            | elem fp r1 && isIn fp a2 = (r,c,a ++ [(fp,get fp a2)],x)
+            | isIn fp a1 && elem fp r2 = (r,c,a ++ [(fp,get fp a1)],x)
+            | isIn fp a1 && isIn fp c2 = (r,c,a,x ++ [ fp ++ ": left add, right change"])
+            | isIn fp a1 && isIn fp a2 = (r,c,a,x ++ [ fp ++ ": left add, right add"])
+            | isIn fp c1 && elem fp r2 = (r,c ++ [(fp,get fp c1)],a,x)
+            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,join c1 c2,a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
+            | isIn fp c1 && isIn fp a2 = (r,c,a,x ++ [fp ++ ": left change, right add"])
+            | isIn fp c1               = (r,c ++ [(fp,get fp c1)],a,x)
+            | isIn fp c2               = (r,c ++ [(fp,get fp c2)],a,x)
+            | elem fp r1 || elem fp r2 = (r ++ [fp],c,a,x)
+            | isIn fp a1               = (r,c,a ++ [(fp,get fp a1)],x)
+            | isIn fp a2               = (r,c,a ++ [(fp,get fp a2)],x)
+            | otherwise                = (r,c,a,x) 
+          isIn fp = elem fp . map fst
+          get = fmap (fromMaybe undefined) . lookup
+          conv (x,y,z,[]) = Right $ PureCommit x y z
+          conv (_,_,_,err) = Left err
+          join = fmap sort . (++)
+               
