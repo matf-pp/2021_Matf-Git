@@ -8,7 +8,7 @@ module LeGit.Basic (
     PureCommit(PureCommit), commitRemoves, commitAdds, commitChanges,
     Commit(Commit), commitInfo, pureCommit,
     ShaStr, Tree,
-    Head(Ref,Tag,Sha),
+    Head(Ref,Tag,Sha), ref, tag, sha,
     Pointers(Pointers), phead, refs, tags,
     
 

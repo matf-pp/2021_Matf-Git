@@ -52,9 +52,9 @@ getPredecessors r s = do
 
 insertNode :: Repo -> Commit -> [ShaStr] -> IO ShaStr
 insertNode r commit parents = do
-    let sha = shaGen commit
+    let sha' = shaGen commit
     tree <- getTree r
-    writeJsonToRepo treeFile r $ M.insert sha parents tree
-    writeJsonToRepo (`shaToFP` sha) r commit
-    return sha
+    writeJsonToRepo treeFile r $ M.insert sha' parents tree
+    writeJsonToRepo (`shaToFP` sha') r commit
+    return sha'
 
