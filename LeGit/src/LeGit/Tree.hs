@@ -1,15 +1,20 @@
-module LeGit.Tree (getTree, shaToFP, getPredecessors, insertNode, writeTree) where
+module LeGit.Tree (
+    getTree, shaToFP, getPredecessors, getPredecessorsShaStr, 
+    getPred,
+    insertNode, writeTree, getClosestCommonPred) where
 
 import LeGit.Basic
 
 import System.FilePath
 import Data.Maybe
+import Data.Either
 import Text.JSON (encode)
 import Data.Text (unpack)
 import Text.Hex (encodeHex)
 import Crypto.Hash.SHA256 (hash)
 import Data.ByteString.UTF8 (fromString)
 import qualified Data.HashMap.Strict as M
+import qualified Data.Set as S
 
 getTree :: Repo -> IO Tree
 getTree = readJsonFromRepo treeFile M.empty
@@ -60,3 +65,24 @@ insertNode r commit parents = do
 
 writeTree :: Repo -> Tree -> IO ()
 writeTree = writeJsonToRepo treeFile
+
+getClosestCommonPred' :: Tree -> [ShaStr] -> [ShaStr] -> ShaStr
+getClosestCommonPred' t s1Pred s2Pred = foldl pom undefined $ zip s1Pred s2Pred
+    where pom def (a, b)
+            | a == b    = a
+            | otherwise = def
+
+getClosestCommonPred :: Tree -> ShaStr -> ShaStr -> Either String ShaStr
+getClosestCommonPred t s1 s2 = isValid t s1 s2 s1Pred s2Pred
+    where s1Pred     = getPredecessorsShaStr s1 t
+          s2Pred     = getPredecessorsShaStr s2 t
+          msg        = Left . ("Cannot merge: " ++)
+          find' a b  = S.member a $ pom b S.empty
+          pom b acc  = foldr pom (S.insert b acc) (fromMaybe undefined $ M.lookup b t)
+          isValid t s1 s2 s1Pred s2Pred
+            | not $ M.member s1 t = msg $ s1 ++ " does not exist"
+            | not $ M.member s2 t = msg $ s2 ++ " does not exist"
+            | s1 == s2            = msg $ s1 ++ " and " ++ s2 ++ " are the same"
+            | find' s1 s2         = msg $ s1 ++ " is a predecessor of " ++ s2
+            | find' s2 s1         = msg $ s2 ++ " is a predecessor of " ++ s1
+            | otherwise           = Right $ getClosestCommonPred' t s1Pred s2Pred

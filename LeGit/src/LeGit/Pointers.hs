@@ -1,13 +1,14 @@
 module LeGit.Pointers (
-    getPointers, initState, writeCommit, getPredCommits,
+    getPointers, initState, writeCommit, writeMerge, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha,
-    setTag, setRef, removeTag, removeRef, isSha
+    setTag, setRef, removeTag, removeRef, isSha, get3Lists
 ) where
 
 import LeGit.Basic
 import LeGit.Tree
 
 import Data.Maybe
+import Data.Either
 import Data.List
 import qualified Data.HashMap.Strict as M
 import Data.Hashable
@@ -121,7 +122,34 @@ getPredCommits r = getShaFromRepo r >>= getPredecessors r
 writeCommit :: Repo -> Commit -> IO ()
 writeCommit r c = do
     p <- getPointers r
-    if isCommitable (phead p) then pure () else errorMsg "Cannot update when Head is not reference"
+    if isCommitable (phead p) then pure () else errorMsg "Cannot update when HEAD is not reference"
     let oldS = getShaFromHead p
     s <- insertNode r c [oldS]
     writePointers r $ updateRef p s
+
+writeMerge :: Repo -> String -> Commit -> IO ()
+writeMerge repo name c = do
+    secondSha <- getShaFromRepo repo
+    setHeadFromRef repo name
+    p <- getPointers repo
+    let mainSha = getShaFromHead p
+    s <- insertNode repo c [mainSha, secondSha]
+    writePointers repo $ updateRef p s
+
+get3Lists :: Repo -> String -> IO ([Commit], [Commit], [Commit])
+get3Lists r name = do --(rootToCommonInc, commonExcToS1, commonExcToS2) --Inc = including, Exc = excluding
+    tree <- getTree r
+    p@(Pointers h refsMap tagsMap) <- getPointers r
+    if isCommitable h then return () else errorMsg "Cannot merge: HEAD is not reference"
+    let pom = M.lookup name refsMap
+    if isNothing pom then errorMsg $ "Cannot merge: " ++ name ++ " is not a reference" else return ()
+    let sha1 = getShaFromHead p
+    let sha2 = fromMaybe undefined pom
+    let res = getClosestCommonPred tree sha1 sha2
+    if isLeft res then errorMsg $ fromLeft undefined res else return ()
+    let parent = fromRight undefined res
+    let mapm = mapM (flip getPred r)
+    parentCommit <- mapm $ getPredecessorsShaStr parent tree
+    sha1commit <- mapm $ tail $ dropWhile (/= parent) $ getPredecessorsShaStr sha1 tree
+    sha2commit <- mapm $ tail $ dropWhile (/= parent) $ getPredecessorsShaStr sha2 tree
+    return (parentCommit, sha1commit, sha2commit)
