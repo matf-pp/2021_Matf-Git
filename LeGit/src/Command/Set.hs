@@ -49,7 +49,7 @@ optAddTag = AddTag <$> strOption (
 optRemoveRef :: Parser SetType
 optRemoveRef = RemoveRef <$> strOption (
             long "remove-branch"
-            <> metavar "BRANCH_NAME"
+            <> metavar "NAME"
             <> help "Deletes a branch (does not delete it's commits)"
             )
 
