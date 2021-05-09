@@ -1,5 +1,5 @@
 module Command.Basic (
-    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
+    SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag, RemoveRef, RemoveTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus),
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Init, Set, Print, Commit, Visit, GarbageCollector),
@@ -14,6 +14,8 @@ data SetType = SetUserName String
              | RemoveIgnore FilePath
              | AddRef String
              | AddTag String
+             | RemoveRef String
+             | RemoveTag String
   deriving (Eq, Show)
   
 data PrintType = PrintUserInfo

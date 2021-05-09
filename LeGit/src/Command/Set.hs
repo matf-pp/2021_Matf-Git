@@ -46,6 +46,20 @@ optAddTag = AddTag <$> strOption (
             <> help "Stores the current head as a tagged special commit"
             )
 
+optRemoveRef :: Parser SetType
+optRemoveRef = RemoveRef <$> strOption (
+            long "remove-branch"
+            <> metavar "BRANCH_NAME"
+            <> help "Deletes a branch (does not delete it's commits)"
+            )
+
+optRemoveTag :: Parser SetType
+optRemoveTag = RemoveTag <$> strOption (
+            long "remove-tag"
+            <> metavar "TAG"
+            <> help "Deletes a tag (does not delete it's commits)"
+            )
+
 setOptions :: Parser Command
 setOptions = Set <$> optDir <*> some (    optEmail 
                                       <|> optUserName 
@@ -53,6 +67,8 @@ setOptions = Set <$> optDir <*> some (    optEmail
                                       <|> optRemoveIgnore 
                                       <|> optAddRef 
                                       <|> optAddTag
+                                      <|> optRemoveRef
+                                      <|> optRemoveTag
                                         )
 
 commandSet :: Mod CommandFields Command
