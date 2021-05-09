@@ -2,7 +2,7 @@ module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead),
     VisitType(VisitRef, VisitTag, VisitSha),
-    Command(Init, Set, Print, Commit, Visit),
+    Command(Init, Set, Print, Commit, Visit, GarbageCollector),
     optDir, directory
 ) where
 
@@ -31,6 +31,7 @@ data Command = Init {directory :: FilePath, force :: Bool}
              | Print {directory :: FilePath, printArg :: PrintType}
              | Commit {directory :: FilePath, message :: String}
              | Visit {directory :: FilePath, visitType :: VisitType}
+             | GarbageCollector {directory :: FilePath}
   deriving (Eq, Show)
 
 optDir :: Parser String

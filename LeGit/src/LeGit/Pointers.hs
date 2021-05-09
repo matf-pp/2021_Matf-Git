@@ -1,7 +1,7 @@
 module LeGit.Pointers (
     getPointers, initState, writeCommit, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha,
-    setTag, setRef
+    setTag, setRef, removeTag, removeRef, isSha
 ) where
 
 import LeGit.Basic
@@ -68,6 +68,14 @@ setTag r tagName = do
     let newP = addTag p tagName
     writePointers r newP
 
+removeTag :: Repo -> String -> IO ()
+removeTag r s = do
+    (Pointers h refsMap tagsMap) <- getPointers r
+    if isThisTag h s then errorMsg $ "Cannot remove tag " ++ s ++ ": Head pointing to it"
+                     else writePointers r (Pointers h refsMap $ M.delete s tagsMap)
+        where isThisTag (Tag curr) s = s == curr
+              isThisTag _ _          = False
+
 addRef :: Pointers -> String -> Pointers
 addRef p@(Pointers _ r t) name = Pointers (Ref name) newR t
     where newSha = getShaFromHead p
@@ -79,9 +87,21 @@ setRef r refName = do
     let newP = addRef p refName
     writePointers r newP
 
+removeRef :: Repo -> String -> IO ()
+removeRef r s = do
+    (Pointers h refsMap tagsMap) <- getPointers r
+    if isThisRef h s then errorMsg $ "Cannot remove branch " ++ s ++ ": Head pointing to it"
+                     else writePointers r (Pointers h (M.delete s refsMap) tagsMap)
+        where isThisRef (Ref curr) s = s == curr
+              isThisRef _ _          = False
+
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
 isCommitable _       = False
+
+isSha :: Head -> Bool
+isSha (Sha _) = True
+isSha _       = False
 
 updateRef :: Pointers -> ShaStr -> Pointers
 updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t

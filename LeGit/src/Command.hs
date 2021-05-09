@@ -3,7 +3,7 @@ module Command (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead), 
     VisitType(VisitRef, VisitTag, VisitSha),
-    Command(Init, Set, Print, Commit, Visit),
+    Command(Init, Set, Print, Commit, Visit, GarbageCollector),
     directory,
     --Other
     execOpt
@@ -25,6 +25,7 @@ optProgram = hsubparser (
            <> commandShow
            <> commandCommit
            <> commandVisit
+           <> commandInit
          )
 
 opts :: ParserInfo Command
