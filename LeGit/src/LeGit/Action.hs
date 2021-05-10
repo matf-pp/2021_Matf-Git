@@ -1,5 +1,5 @@
 module LeGit.Action (
-    LeGit.Action.commit,
+    LeGit.Action.commit, LeGit.Action.merge,
     visitRef, visitTag, visitSha,
     garbageCollector
 ) where
@@ -20,6 +20,10 @@ commit fp msg = actionErrorCheck pom fp
             LeGit.Commit.commit r msg
             currHead <- phead <$> getPointers r
             putStrLn $ "HEAD -> " ++ show currHead
+
+merge :: FilePath -> String -> String -> IO ()
+merge fp name msg = actionErrorCheck f fp
+    where f r = LeGit.Commit.merge r name msg
 
 visitRef :: FilePath -> String -> IO ()
 visitRef fp s = actionErrorCheck pom fp

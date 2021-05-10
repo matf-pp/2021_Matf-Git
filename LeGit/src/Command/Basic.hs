@@ -2,7 +2,7 @@ module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag, RemoveRef, RemoveTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus),
     VisitType(VisitRef, VisitTag, VisitSha),
-    Command(Init, Set, Print, Commit, Visit, GarbageCollector),
+    Command(Init, Set, Print, Commit, Merge, Visit, GarbageCollector),
     optDir, directory
 ) where
 
@@ -33,6 +33,7 @@ data Command = Init {directory :: FilePath, force :: Bool}
              | Set  {directory :: FilePath, setArgs :: [SetType]}
              | Print {directory :: FilePath, printArg :: PrintType}
              | Commit {directory :: FilePath, message :: String}
+             | Merge {directory :: FilePath, branch :: String, message :: String}
              | Visit {directory :: FilePath, visitType :: VisitType}
              | GarbageCollector {directory :: FilePath}
   deriving (Eq, Show)

@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge) where
 
 import LeGit.Basic
 import LeGit.Info

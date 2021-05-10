@@ -26,6 +26,7 @@ legit (Visit _ vt) d = pom vt
           pom (VisitTag s) = LeGit.visitTag d s
           pom (VisitSha s) = LeGit.visitSha d s
 legit (GarbageCollector _) d = LeGit.garbageCollector d
+legit (Merge _ name msg) d = LeGit.merge d name msg
 
 run :: Command -> IO ()
 run c = d >>= legit c
