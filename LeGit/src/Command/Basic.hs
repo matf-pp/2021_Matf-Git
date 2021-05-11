@@ -3,7 +3,7 @@ module Command.Basic (
     PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus),
     VisitType(VisitRef, VisitTag, VisitSha),
     Command(Init, Set, Print, Commit, Merge, Visit, GarbageCollector),
-    optDir, directory
+    optDir, optMessage, directory
 ) where
 
 import Options.Applicative
@@ -45,3 +45,10 @@ optDir = strOption (long "directory"
                    <> metavar "PATH" 
                    <> help "Path to directory to be initialised into a repository (default: current working directory)")
 
+optMessage :: Parser String
+optMessage = strOption ( long "message"
+                      <> short 'm'
+                      <> value "No message added"
+                      <> metavar "MESSAGE"
+                      <> help "Message to be appended to the commit"
+                       )
