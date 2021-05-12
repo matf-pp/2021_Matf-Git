@@ -74,11 +74,13 @@ data PureCommit = PureCommit {
     commitChanges :: [(FilePath, [Diff])],
     commitAdds    :: [(FilePath, Contents)]
 }
+    deriving Show
 
 data Commit = Commit { 
     commitInfo :: M.HashMap String String, 
     pureCommit :: PureCommit
 }
+    deriving Show
 
 instance JSON Commit where
     showJSON (Commit i (PureCommit r c a)) = 
