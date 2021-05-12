@@ -16,6 +16,7 @@ import Command.Show
 import Command.Commit
 import Command.Visit
 import Command.Merge
+import Command.GarbageCollector
 
 import Options.Applicative
 
@@ -27,7 +28,7 @@ optProgram = hsubparser (
            <> commandCommit
            <> commandMerge
            <> commandVisit
-           <> commandInit
+           <> commandGC
          )
 
 opts :: ParserInfo Command

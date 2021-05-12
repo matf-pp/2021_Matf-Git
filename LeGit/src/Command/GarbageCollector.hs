@@ -1,4 +1,4 @@
-module Command.GarbageCollector (commandInit) where
+module Command.GarbageCollector (commandGC) where
 
 import Command.Basic
 import Options.Applicative
@@ -6,5 +6,5 @@ import Options.Applicative
 initOptions :: Parser Command
 initOptions = GarbageCollector <$> optDir 
 
-commandInit :: Mod CommandFields Command
-commandInit = command "gc" (info initOptions (progDesc "Garbage Collector that removes unaccesible commits"))
+commandGC :: Mod CommandFields Command
+commandGC = command "gc" (info initOptions (progDesc "Garbage Collector that removes unaccesible commits"))
