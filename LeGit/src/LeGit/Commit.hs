@@ -165,10 +165,8 @@ merge r s msg = do
           info <- makeCommitInfo r msg
           (a,b,c) <- get3Lists r s
           let parRec = reconstruct a
-          let blists = merge' parRec b         
-          let clists = merge' parRec c
-          let rez = makeMergeCommit parRec blists clists
-          if isRight rez then writeMerge r s $ Commit info $ fromRight undefined rez
+          let rez = on (makeMergeCommit parRec) (merge' parRec) c b
+          if isRight rez then (writeMerge r s $ Commit info $ fromRight undefined rez) >> visit r
                          else mapM_ putStrLn $ fromLeft undefined rez
 
 merge' :: DirStruct -> [Commit] -> PureCommit
