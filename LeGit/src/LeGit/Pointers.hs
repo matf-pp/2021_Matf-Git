@@ -72,10 +72,10 @@ setTag r tagName = do
 removeTag :: Repo -> String -> IO ()
 removeTag r s = do
     (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisTag h s then errorMsg $ "Cannot remove tag " ++ s ++ ": Head pointing to it"
-                     else writePointers r (Pointers h refsMap $ M.delete s tagsMap)
-        where isThisTag (Tag curr) s = s == curr
-              isThisTag _ _          = False
+    if isThisTag h then errorMsg $ "Cannot remove tag " ++ s ++ ": Head pointing to it"
+                   else writePointers r (Pointers h refsMap $ M.delete s tagsMap)
+        where isThisTag (Tag curr) = s == curr
+              isThisTag _          = False
 
 addRef :: Pointers -> String -> Pointers
 addRef p@(Pointers _ r t) name = Pointers (Ref name) newR t
@@ -91,10 +91,10 @@ setRef r refName = do
 removeRef :: Repo -> String -> IO ()
 removeRef r s = do
     (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisRef h s then errorMsg $ "Cannot remove branch " ++ s ++ ": Head pointing to it"
-                     else writePointers r (Pointers h (M.delete s refsMap) tagsMap)
-        where isThisRef (Ref curr) s = s == curr
-              isThisRef _ _          = False
+    if isThisRef h then errorMsg $ "Cannot remove branch " ++ s ++ ": Head pointing to it"
+                   else writePointers r (Pointers h (M.delete s refsMap) tagsMap)
+        where isThisRef (Ref curr) = s == curr
+              isThisRef _          = False
 
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
@@ -139,7 +139,7 @@ writeMerge repo name c = do
 get3Lists :: Repo -> String -> IO ([Commit], [Commit], [Commit])
 get3Lists r name = do --(rootToCommonInc, commonExcToS1, commonExcToS2) --Inc = including, Exc = excluding
     tree <- getTree r
-    p@(Pointers h refsMap tagsMap) <- getPointers r
+    p@(Pointers h refsMap _) <- getPointers r
     if isCommitable h then return () else errorMsg "Cannot merge: HEAD is not reference"
     let pom = M.lookup name refsMap
     if isNothing pom then errorMsg $ "Cannot merge: " ++ name ++ " is not a reference" else return ()
