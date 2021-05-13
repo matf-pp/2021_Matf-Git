@@ -125,23 +125,20 @@ visit r = do
                  
 isMergeable :: [Diff] -> [Diff] -> Bool
 isMergeable l r = foldr fja True l
-    where fja d1 acc = if fst (foldr pom (True,d1) r) then acc && True else False
-          pom d2 (acc,d1) = (pom' acc d1 d2,d1)
-          pom' acc (Remove i1 c1) (Remove i2 c2) = pom'' acc i1 c1 i2 c2
-          pom' acc (Remove i1 c1) (Add i2 c2) = pom'' acc i1 c1 i2 (length c2)
-          pom' acc (Add i1 c1) (Remove i2 c2) = pom'' acc i1 (length c1) i2 c2
-          pom' acc (Add i1 c1) (Add i2 c2) = pom'' acc i1 (length c1) i2 (length c2)
-          pom'' acc i1 c1 i2 c2
-            | i1 < i2 && i1+c1 > i2 = False
-            | i1 < i2 && i1+c1 <= i2 = acc && True
-            | i1 > i2 && i2+c2 <= i1 = acc && True
-            | i1 > i2 && i2+c2 > i1 = False
-            | otherwise = False 
+    where fja d1 acc' = if foldr pom True r then acc' else False
+                where pom d2 acc = on (pom' acc) toPair d1 d2
+                      pom' acc (i1, c1) (i2, c2)
+                            | i1 < i2 = if i1+c1 > i2 then False else acc
+                            | i1 > i2 = if i2+c2 > i1 then False else acc
+                            | i1 == i2 = False
+                            | otherwise = True
+                      toPair (Remove i c) = (i, c)
+                      toPair (Add i c)    = (i, length c)
             
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
-makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) (M.toList p)
-    where fja (r,c,a,x) (fp,_)
+makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) (M.keys p)
+    where fja (r,c,a,x) fp
             | elem fp r1 && elem fp r2 = (r ++ [fp],c,a,x)
             | elem fp r1 && isIn fp c2 = (r,c ++ [(fp,get fp c2)],a,x)
             | elem fp r1 && isIn fp a2 = (r,c,a ++ [(fp,get fp a2)],x)
@@ -149,7 +146,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja
             | isIn fp a1 && isIn fp c2 = (r,c,a,x ++ [ fp ++ ": left add, right change"])
             | isIn fp a1 && isIn fp a2 = (r,c,a,x ++ [ fp ++ ": left add, right add"])
             | isIn fp c1 && elem fp r2 = (r,c ++ [(fp,get fp c1)],a,x)
-            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,join c1 c2,a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
+            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,c2,a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
             | isIn fp c1 && isIn fp a2 = (r,c,a,x ++ [fp ++ ": left change, right add"])
             | isIn fp c1               = (r,c ++ [(fp,get fp c1)],a,x)
             | isIn fp c2               = (r,c ++ [(fp,get fp c2)],a,x)
@@ -161,25 +158,36 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja
           get = fmap (fromMaybe undefined) . lookup
           conv (x,y,z,[]) = Right $ PureCommit x y z
           conv (_,_,_,err) = Left err
-          join = fmap sort . (++)
+          --join = fmap sort . (++)
              
 merge :: Repo -> String -> String -> IO ()
 merge r s msg = do
           info <- makeCommitInfo r msg
           (a,b,c) <- get3Lists r s
           let parRec = reconstruct a
-          let bRec = reconstruct' parRec b
-          let cRec = reconstruct' parRec c
-          let (lb,bb,db) = on makeFilePathDiff M.keys parRec bRec
-          let (lc,bc,dc) = on makeFilePathDiff M.keys parRec bRec
-          let rb = makeRemoveList lb
-          cb <- makeChangeList parRec bb
-          ab <- makeAddList db
-          let rc = makeRemoveList lc
-          cc <- makeChangeList parRec bc
-          ac <- makeAddList dc
-          let blists = PureCommit rb cb ab         
-          let clists = PureCommit rc cc ac
+          let blists = merge' parRec b         
+          let clists = merge' parRec c
           let rez = makeMergeCommit parRec blists clists
           if isRight rez then writeMerge r s (Commit info (fromRight undefined rez))
                          else mapM_ putStrLn (fromLeft undefined rez)
+
+merge' :: DirStruct -> [Commit] -> PureCommit
+merge' parRec child = PureCommit (rchild lists) (cchild lists) (achild lists)
+        where childRec = reconstruct' parRec child
+              lists = on makeFilePathDiff M.keys parRec childRec
+              rchild (l,_,_)= makeRemoveList l
+              cchild (_,b,_)=  makeMergeChangeList parRec childRec b
+              achild (_,_,d)= makeMergeAddList parRec d
+         
+
+makeMergeAddList  :: DirStruct -> [FilePath] -> [(FilePath,Contents)]
+makeMergeAddList par l = foldl pom [] l
+        where pom acc fp = acc ++ [(fp,fromMaybe undefined  (M.lookup fp par))]
+
+makeMergeChangeList :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
+makeMergeChangeList par child l = foldl pom [] l 
+        where isFile (File _) = True
+              isFile _ = False 
+              find fp rec = fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec
+              pom acc fp = acc ++ [(fp,makeDiff (find fp (M.filter isFile par)) (find fp (M.filter isFile child) ))]
+              
