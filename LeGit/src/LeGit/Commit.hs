@@ -137,7 +137,7 @@ isMergeable l r = foldr fja True l
             
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
-makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) (M.keys p)
+makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) $ M.keys p
     where fja (r,c,a,x) fp
             | elem fp r1 && elem fp r2 = (r ++ [fp],c,a,x)
             | elem fp r1 && isIn fp c2 = (r,c ++ [(fp,get fp c2)],a,x)
@@ -168,26 +168,24 @@ merge r s msg = do
           let blists = merge' parRec b         
           let clists = merge' parRec c
           let rez = makeMergeCommit parRec blists clists
-          if isRight rez then writeMerge r s (Commit info (fromRight undefined rez))
-                         else mapM_ putStrLn (fromLeft undefined rez)
+          if isRight rez then writeMerge r s $ Commit info $ fromRight undefined rez
+                         else mapM_ putStrLn $ fromLeft undefined rez
 
 merge' :: DirStruct -> [Commit] -> PureCommit
-merge' parRec child = PureCommit (rchild lists) (cchild lists) (achild lists)
-        where childRec = reconstruct' parRec child
-              lists = on makeFilePathDiff M.keys parRec childRec
-              rchild (l,_,_)= makeRemoveList l
-              cchild (_,b,_)=  makeMergeChangeList parRec childRec b
-              achild (_,_,d)= makeMergeAddList parRec d
+merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys parRec childRec
+        where childRec       = reconstruct' parRec child
+              pc (r, c, a)   = PureCommit r c a
+              map' (l, b, d) = (makeRemoveList l, makeMergeChangeList parRec childRec b, makeMergeAddList parRec d)
          
 
 makeMergeAddList  :: DirStruct -> [FilePath] -> [(FilePath,Contents)]
-makeMergeAddList par l = foldl pom [] l
-        where pom acc fp = acc ++ [(fp,fromMaybe undefined  (M.lookup fp par))]
+makeMergeAddList par = map pom
+        where pom fp = (fp,fromMaybe undefined $ M.lookup fp par)
 
 makeMergeChangeList :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
-makeMergeChangeList par child l = foldl pom [] l 
-        where isFile (File _) = True
-              isFile _ = False 
-              find fp rec = fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec
-              pom acc fp = acc ++ [(fp,makeDiff (find fp (M.filter isFile par)) (find fp (M.filter isFile child) ))]
+makeMergeChangeList par child = map pom
+        where pom fp = (fp, on makeDiff find'' par child)
+                where find'   = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
+                      filter' = M.filter $ isJust . contentsToMaybe
+                      find''  = find' . filter'
               

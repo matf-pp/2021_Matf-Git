@@ -14,6 +14,7 @@ optUserName = SetUserName <$> strOption (
 optEmail :: Parser SetType
 optEmail = SetEmail <$> strOption (
               long "email"
+              <> short 'e'
               <> metavar "EMAIL"
               <> help "Pass the email of the user writing to the repository"
               )
@@ -35,6 +36,7 @@ optRemoveIgnore = RemoveIgnore <$> strOption (
 optAddRef :: Parser SetType
 optAddRef = AddRef <$> strOption (
             long "new-branch"
+            <> short 'b'
             <> metavar "NEW_NAME"
             <> help "Creates a new branch from the current head"
             )
@@ -42,6 +44,7 @@ optAddRef = AddRef <$> strOption (
 optAddTag :: Parser SetType
 optAddTag = AddTag <$> strOption (
             long "new-tag"
+            <> short 't'
             <> metavar "NEW_NAME"
             <> help "Stores the current head as a tagged special commit"
             )
