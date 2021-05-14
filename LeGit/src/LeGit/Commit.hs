@@ -32,7 +32,7 @@ makeDiff = fmap (map conv . filter f) . on (D.getGroupedDiffBy $ on (==) snd) en
                      conv (D.Second a) = Add (fst $ head a) (map snd a)
                      conv _ = undefined
 
-makeFilePathDiff :: [FilePath] -> [FilePath] -> ([FilePath],[FilePath],[FilePath])
+makeFilePathDiff :: [FilePath] -> [FilePath] -> ([FilePath],[FilePath],[FilePath])   -- new old
 makeFilePathDiff = fmap (foldl fja ([],[],[]))
                  . on D.getDiff sortPaths
                         where fja (x,y,z) (D.First n) = (x, y,n : z)
@@ -146,7 +146,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja
             | isIn fp a1 && isIn fp c2 = (r,c,a,x ++ [ fp ++ ": left add, right change"])
             | isIn fp a1 && isIn fp a2 = (r,c,a,x ++ [ fp ++ ": left add, right add"])
             | isIn fp c1 && elem fp r2 = (r,c ++ [(fp,get fp c1)],a,x)
-            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,c2,a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
+            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,c ++ [(fp,on (makeChanges fp) (get fp) c1 c2)],a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
             | isIn fp c1 && isIn fp a2 = (r,c,a,x ++ [fp ++ ": left change, right add"])
             | isIn fp c1               = (r,c ++ [(fp,get fp c1)],a,x)
             | isIn fp c2               = (r,c ++ [(fp,get fp c2)],a,x)
@@ -158,19 +158,25 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja
           get = fmap (fromMaybe undefined) . lookup
           conv (x,y,z,[]) = Right $ PureCommit x y z
           conv (_,_,_,err) = Left err
-          --join = fmap sort . (++)
+          join = fmap sort . (++)
+          makeChanges fp main grana = on makeDiff (recFile (fromMaybe undefined (contentsToMaybe (fromMaybe undefined (M.lookup fp p)))) ) main (join main grana) 
+          recFile ls dfs = fst $ foldl pom' (ls,0) dfs
+          pom' (old,off) (Remove ind br) = (take (ind-1 + off) old ++ drop (ind -1 + br + off) old,off - br)
+          pom' (old,off) (Add ind s) = (insertBetween s $ flip splitAt old $ (ind+off),off + length s)
+          insertBetween s (l,r) = l ++ s ++ r
+                   
              
 merge :: Repo -> String -> String -> IO ()
 merge r s msg = do
           info <- makeCommitInfo r msg
-          (a,b,c) <- get3Lists r s
+          (a,b,c) <- get3Lists r s --b grana, c main 
           let parRec = reconstruct a
           let rez = on (makeMergeCommit parRec) (merge' parRec) c b
           if isRight rez then (writeMerge r s $ Commit info $ fromRight undefined rez) >> visit r
                          else mapM_ putStrLn $ fromLeft undefined rez
 
 merge' :: DirStruct -> [Commit] -> PureCommit
-merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys parRec childRec
+merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys childRec parRec 
         where childRec       = reconstruct' parRec child
               pc (r, c, a)   = PureCommit r c a
               map' (l, b, d) = (makeRemoveList l, makeMergeChangeList parRec childRec b, makeMergeAddList parRec d)
