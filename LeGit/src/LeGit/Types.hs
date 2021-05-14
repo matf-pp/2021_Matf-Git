@@ -1,5 +1,5 @@
 module LeGit.Types (
-    Diff(Add,Remove),
+    Diff(Add,Remove), diffIndex, diffNum, diffLines,
     Contents(File,Dir),
     DirStruct,
     PureCommit(PureCommit), commitRemoves, commitAdds, commitChanges,
@@ -10,6 +10,7 @@ module LeGit.Types (
 ) where
 
 import Text.JSON
+import Data.Function
 import qualified Data.HashMap.Strict as M
 import qualified Data.Hashable as H
 import Control.Applicative ((<|>))
@@ -28,19 +29,16 @@ instance (Eq k, H.Hashable k, JSKey k, JSON v) => JSON (M.HashMap k v) where
     readJSON = fmap M.fromList . decJSDict "Failed to parse Json Object as HashMap"
 
 data Diff = Remove { 
-    removeIndex :: Int, 
-    num :: Int
+    diffIndex :: Int, 
+    diffNum :: Int
 }         | Add { 
-    addIndex :: Int, 
-    addLines :: [String] 
+    diffIndex :: Int, 
+    diffLines :: [String] 
 }
     deriving(Show,Eq)
     
 instance Ord Diff where 
-        compare (Remove i1 _) (Add i2 _) = compare i1 i2
-        compare (Add i1 _) (Remove i2 _) = compare i1 i2
-        compare (Add i1 _) (Add i2 _) = compare i1 i2
-        compare (Remove i1 _) (Remove i2 _) = compare i1 i2
+        compare a b = on compare diffIndex a b
 
 instance JSON Diff where
     showJSON (Remove i n) = makeObj [("type", showJSON "remove")

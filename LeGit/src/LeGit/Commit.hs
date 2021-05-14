@@ -59,9 +59,8 @@ change acc = foldl (flip change') acc . commitChanges . pureCommit
               getOld = fmap (fromMaybe undefined) . M.lookup
               pom (File old) = fst . foldl pom' (old,0)
               pom Dir = undefined
-              pom' (old,off) (Remove ind br) = (take (ind-1 + off) old ++ drop (ind -1 + br + off) old,off - br)
-              pom' (old,off) (Add ind s) = (insertBetween s $ flip splitAt old $ ind-1,off + length s)
-              insertBetween s (l,r) = l ++ s ++ r
+              pom' (old,off) (Remove ind br) = (dropBetween old (ind + off - 1) br, off - br)
+              pom' (old,off) (Add ind s) = (insertBetween s old $ ind - 1, off + length s)
 
 
 reconstruct' :: DirStruct -> [Commit] -> DirStruct
@@ -130,40 +129,51 @@ isMergeable l r = foldr fja True l
                       pom' acc (i1, c1) (i2, c2)
                             | i1 < i2 = if i1+c1 > i2 then False else acc
                             | i1 > i2 = if i2+c2 > i1 then False else acc
-                            | i1 == i2 = False
-                            | otherwise = True
+                            | otherwise = False
                       toPair (Remove i c) = (i, c)
                       toPair (Add i c)    = (i, length c)
             
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
-makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = conv $ foldl fja ([],[],[],[]) $ M.keys p
-    where fja (r,c,a,x) fp
-            | elem fp r1 && elem fp r2 = (r ++ [fp],c,a,x)
-            | elem fp r1 && isIn fp c2 = (r,c ++ [(fp,get fp c2)],a,x)
-            | elem fp r1 && isIn fp a2 = (r,c,a ++ [(fp,get fp a2)],x)
-            | isIn fp a1 && elem fp r2 = (r,c,a ++ [(fp,get fp a1)],x)
-            | isIn fp a1 && isIn fp c2 = (r,c,a,x ++ [ fp ++ ": left add, right change"])
-            | isIn fp a1 && isIn fp a2 = (r,c,a,x ++ [ fp ++ ": left add, right add"])
-            | isIn fp c1 && elem fp r2 = (r,c ++ [(fp,get fp c1)],a,x)
-            | isIn fp c1 && isIn fp c2 = if on isMergeable (get fp) c1 c2 then (r,c ++ [(fp,on (makeChanges fp) (get fp) c1 c2)],a,x) else (r,c,a,x ++ [fp ++ ": left change, right change"])
-            | isIn fp c1 && isIn fp a2 = (r,c,a,x ++ [fp ++ ": left change, right add"])
-            | isIn fp c1               = (r,c ++ [(fp,get fp c1)],a,x)
-            | isIn fp c2               = (r,c ++ [(fp,get fp c2)],a,x)
-            | elem fp r1 || elem fp r2 = (r ++ [fp],c,a,x)
-            | isIn fp a1               = (r,c,a ++ [(fp,get fp a1)],x)
-            | isIn fp a2               = (r,c,a ++ [(fp,get fp a2)],x)
-            | otherwise                = (r,c,a,x) 
-          isIn fp = elem fp . map fst
-          get = fmap (fromMaybe undefined) . lookup
-          conv (x,y,z,[]) = Right $ PureCommit x y z
-          conv (_,_,_,err) = Left err
+makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) $ M.keys p
+    where fja acc fp
+            | elem' r1 && isIn c2 = newC c2
+            | elem' r1 && isIn a2 = newA a2
+            | isIn a1 && elem' r2 = newA a1
+            | isIn c1 && elem' r2 = newC c1
+            | on (||) elem' r1 r2 = newR
+            | isIn a1 && isIn c2  = newE "left add, right change"
+            | isIn c1 && isIn a2  = newE "left change, right add"
+            | isIn a1 && isIn a2  = newE "left add, right add"
+            | isIn c1 && isIn c2  = if on isMergeable get c1 c2 
+                                    then newChange acc (fp, on makeChanges get c1 c2)
+                                    else newE "left change, right change"
+            | isIn c1             = newC c1
+            | isIn c2             = newC c2
+            | isIn a1             = newA a1
+            | isIn a2             = newA a2
+            | otherwise           = acc
+                where newR  = newRemove acc fp
+                      newE  = newError acc . (fp ++) . (": " ++)
+                      newC  = newChange acc . (fp,) . get
+                      newA  = newAdd acc . (fp,) . get
+                      get   = fromMaybe undefined . lookup fp
+                      isIn  = elem fp . map fst
+                      elem' = elem fp
+                      get'  = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
+                      makeChanges main              = on makeDiff (recFile $ get' p) main . join main
+                      recFile ls                    = fst . foldl pom (ls,0)
+                      pom (old,off) (Remove ind br) = (dropBetween old (ind + off - 1) br, off - br)
+                      pom (old,off) (Add ind s)     = (insertBetween s old $ ind + off, off + length s)
+          newRemove (Right (PureCommit r c a)) n = Right $ PureCommit (n : r) c a
+          newRemove acc _                        = acc
+          newChange (Right (PureCommit r c a)) n = Right $ PureCommit r (n : c) a
+          newChange acc _                        = acc
+          newAdd (Right (PureCommit r c a)) n    = Right $ PureCommit r c (n : a)
+          newAdd acc _                           = acc
+          newError (Left xs) n                   = Left $  n : xs
+          newError _ n                           = Left [n]
           join = fmap sort . (++)
-          makeChanges fp main grana = on makeDiff (recFile (fromMaybe undefined (contentsToMaybe (fromMaybe undefined (M.lookup fp p)))) ) main (join main grana) 
-          recFile ls dfs = fst $ foldl pom' (ls,0) dfs
-          pom' (old,off) (Remove ind br) = (take (ind-1 + off) old ++ drop (ind -1 + br + off) old,off - br)
-          pom' (old,off) (Add ind s) = (insertBetween s $ flip splitAt old $ (ind+off),off + length s)
-          insertBetween s (l,r) = l ++ s ++ r
                    
              
 merge :: Repo -> String -> String -> IO ()

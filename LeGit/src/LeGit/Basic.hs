@@ -2,7 +2,7 @@ module LeGit.Basic (
     --Types and getters
     Repo, baseDir, repoDir, pointersFile, infoFile, repoDirName,
     commitsDir, treeFile, ignoreFile, fromBaseDir, 
-    Diff(Add,Remove),
+    Diff(Add,Remove),  diffIndex, diffNum, diffLines,
     Contents(File,Dir),
     DirStruct,
     PureCommit(PureCommit), commitRemoves, commitAdds, commitChanges,
@@ -24,7 +24,7 @@ module LeGit.Basic (
     cmpPath, sortPaths, isParent, jsonExt,
 
     --Utility
-    (?), readFileLines, enumerate, getTimeString, errorMsg
+    (?), readFileLines, enumerate, getTimeString, errorMsg, insertBetween, dropBetween
 ) where
 
 import System.Exit
@@ -58,6 +58,13 @@ enumerate = zip [1..]
 
 getTimeString :: IO String
 getTimeString = takeWhile (/= '.') . show <$> getZonedTime
+
+insertBetween :: [a] -> [a] -> Int -> [a]
+insertBetween new = fmap pom . flip splitAt
+    where pom (a, b) = a ++ new ++ b
+
+dropBetween :: [a] -> Int -> Int -> [a]
+dropBetween l i n = take i l ++ drop (i + n) l
 
 -- Repo stuff
 
