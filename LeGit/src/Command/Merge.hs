@@ -8,7 +8,7 @@ optBranch :: Parser String
 optBranch = strOption ( long "branch"
                       <> short 'b'
                       <> metavar "BRANCH_NAME"
-                      <> help "Branch with witch HEAD is merged"
+                      <> help "Branch with which HEAD is merged"
                        )
 
 optMerge :: Parser Command 

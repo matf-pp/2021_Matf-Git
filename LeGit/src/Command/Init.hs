@@ -7,11 +7,11 @@ import Options.Applicative
 optForce :: Parser Bool
 optForce = switch (long "force"
                   <> short 'f'
-                  <> help "Forces initialization (may owerwrite previous repo info and delete files named after required repo info files)")
+                  <> help "Forces initialization (may overwrite previous repo info and delete files named after required repo info files)")
 
 
 initOptions :: Parser Command
 initOptions = Init <$> optDir <*> optForce
 
 commandInit :: Mod CommandFields Command
-commandInit = command "init" (info initOptions (progDesc "Initialises a directory into a LeGit repo"))
+commandInit = command "init" (info initOptions (progDesc "Initializes a directory into a LeGit repo"))

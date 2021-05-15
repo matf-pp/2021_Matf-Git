@@ -43,7 +43,7 @@ optDir = strOption (long "directory"
                    <> short 'd' 
                    <> value ""
                    <> metavar "PATH" 
-                   <> help "Path to directory to be initialised into a repository (default: current working directory)")
+                   <> help "Path to directory to be initialized into a repository (default: current working directory)")
 
 optMessage :: Parser String
 optMessage = strOption ( long "message"

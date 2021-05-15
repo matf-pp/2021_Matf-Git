@@ -72,7 +72,7 @@ setTag r tagName = do
 removeTag :: Repo -> String -> IO ()
 removeTag r s = do
     (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisTag h then errorMsg $ "Cannot remove tag " ++ s ++ ": Head pointing to it"
+    if isThisTag h then errorMsg $ "Cannot remove tag " ++ s ++ ": HEAD pointing to it"
                    else writePointers r (Pointers h refsMap $ M.delete s tagsMap)
         where isThisTag (Tag curr) = s == curr
               isThisTag _          = False
@@ -91,7 +91,7 @@ setRef r refName = do
 removeRef :: Repo -> String -> IO ()
 removeRef r s = do
     (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisRef h then errorMsg $ "Cannot remove branch " ++ s ++ ": Head pointing to it"
+    if isThisRef h then errorMsg $ "Cannot remove branch " ++ s ++ ": HEAD pointing to it"
                    else writePointers r (Pointers h (M.delete s refsMap) tagsMap)
         where isThisRef (Ref curr) = s == curr
               isThisRef _          = False
@@ -106,7 +106,7 @@ isSha _       = False
 
 updateRef :: Pointers -> ShaStr -> Pointers
 updateRef (Pointers hh@(Ref h) r t) s = Pointers hh (M.insert h s r) t
-updateRef _ _ = error "Cannot update when Head is not reference"
+updateRef _ _ = error "Cannot update when HEAD is not reference"
 
 initState :: Repo -> IO ()
 initState r = do 

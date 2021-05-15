@@ -8,7 +8,7 @@ optUserName = SetUserName <$> strOption (
                  long "username"
                  <> short 'u'
                  <> metavar "USER_NAME"
-                 <> help "Pass the user name of the user writing to the repository"
+                 <> help "Pass the username of the user writing to the repository"
                  )
 
 optEmail :: Parser SetType
@@ -30,7 +30,7 @@ optRemoveIgnore :: Parser SetType
 optRemoveIgnore = RemoveIgnore <$> strOption (
               long "remove-ignore"
               <> metavar "PATH"
-              <> help "Pass the filepath to be removed to the list of ignores"
+              <> help "Pass the filepath to be removed from the list of ignores"
               )
 
 optAddRef :: Parser SetType
@@ -38,7 +38,7 @@ optAddRef = AddRef <$> strOption (
             long "new-branch"
             <> short 'b'
             <> metavar "NEW_NAME"
-            <> help "Creates a new branch from the current head"
+            <> help "Creates a new branch from the current HEAD"
             )
 
 optAddTag :: Parser SetType
@@ -46,7 +46,7 @@ optAddTag = AddTag <$> strOption (
             long "new-tag"
             <> short 't'
             <> metavar "NEW_NAME"
-            <> help "Stores the current head as a tagged special commit"
+            <> help "Stores the current HEAD as a tagged special commit"
             )
 
 optRemoveRef :: Parser SetType

@@ -7,4 +7,4 @@ initOptions :: Parser Command
 initOptions = GarbageCollector <$> optDir 
 
 commandGC :: Mod CommandFields Command
-commandGC = command "gc" (info initOptions (progDesc "Garbage Collector that removes unaccesible commits"))
+commandGC = command "gc" (info initOptions (progDesc "Garbage Collector that removes unaccessible commits"))

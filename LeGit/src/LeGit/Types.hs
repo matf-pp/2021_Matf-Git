@@ -111,7 +111,7 @@ instance JSON Head where
     showJSON (Tag p) = encJSDict [("type", "tag"), ("value", p)]
     showJSON (Sha p) = encJSDict [("type", "sha"), ("value", p)]
     readJSON js = readJSON js >>= getHead
-        where getHead m = getRef m <|> getTag m <|> getSha m <|> rerror "Head"
+        where getHead m = getRef m <|> getTag m <|> getSha m <|> rerror "HEAD"
               getRef    = construct "ref" ref'
               ref' m    = Ref <$> valFromObj "value" m
               getTag    = construct "tag" tag'
