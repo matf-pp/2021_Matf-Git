@@ -6,6 +6,7 @@ import LeGit.Info
 import LeGit.Ignore (getIgnores)
 import LeGit.Pointers
 
+import System.Exit (exitFailure)
 import Data.Function
 import Data.Maybe
 import Data.Either
@@ -187,7 +188,7 @@ merge r s msg = do
           let parRec = reconstruct a
           let rez = on (makeMergeCommit parRec) (merge' parRec) c b
           if isRight rez then (writeMerge r s $ Commit info $ fromRight undefined rez) >> visit r
-                         else mapM_ putStrLn $ fromLeft undefined rez
+                         else (mapM_ putStrLn $ fromLeft undefined rez) >> exitFailure
 
 merge' :: DirStruct -> [Commit] -> PureCommit
 merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys childRec parRec 
