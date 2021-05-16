@@ -207,11 +207,12 @@ makeAddList' par = map pom
         where pom fp = (fp,fromMaybe undefined $ M.lookup fp par)
 
 makeChangeList' :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
-makeChangeList' par child lfp = filter (not . null . snd) ( map pom lfp)
+makeChangeList' par child lfp = filter (not . null . snd) $ map pom $ filter isFile lfp
         where pom fp = (fp, on makeDiff find'' par child)
                 where find'   = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
                       filter' = M.filter $ isJust . contentsToMaybe
                       find''  = find' . filter'
+              isFile fp = isJust $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp par        
 
 revert :: Repo -> Int -> String -> IO ()
 revert r num msg = do
