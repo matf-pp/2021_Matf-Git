@@ -66,12 +66,12 @@ optRemoveTag = RemoveTag <$> strOption (
 setOptions :: Parser Command
 setOptions = Set <$> optDir <*> some (    optEmail 
                                       <|> optUserName 
-                                      <|> optAddIgnore 
-                                      <|> optRemoveIgnore 
                                       <|> optAddRef 
                                       <|> optAddTag
                                       <|> optRemoveRef
                                       <|> optRemoveTag
+                                      <|> optAddIgnore 
+                                      <|> optRemoveIgnore 
                                         )
 
 commandSet :: Mod CommandFields Command

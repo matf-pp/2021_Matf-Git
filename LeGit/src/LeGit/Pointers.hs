@@ -130,7 +130,7 @@ listTags :: Repo -> IO ()
 listTags r = do
     (Pointers h _ tagsMap) <- getPointers r
     mapM_ putStrLn $ pom h $ M.keys tagsMap
-        where pom (Tag name) xs = map (\x -> if x == name then "~~> " ++ x else x) xs
+        where pom (Tag name) xs = map (\x -> if x == name then "~~> " ++ x else "    " ++ x) xs
               pom _ xs          = xs
 
 setHeadRelative :: Repo -> Int -> IO ()
