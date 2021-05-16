@@ -194,7 +194,7 @@ merge' :: DirStruct -> [Commit] -> PureCommit
 merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys childRec parRec 
         where childRec       = reconstruct' parRec child
               pc (r, c, a)   = PureCommit r c a
-              map' (l, b, d) = (makeRemoveList l, makeMergeChangeList parRec childRec b, makeMergeAddList parRec d)
+              map' (l, b, d) = (makeRemoveList l, makeMergeChangeList parRec childRec b, makeMergeAddList childRec d)
          
 
 makeMergeAddList  :: DirStruct -> [FilePath] -> [(FilePath,Contents)]
