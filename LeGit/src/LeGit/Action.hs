@@ -1,5 +1,5 @@
 module LeGit.Action (
-    LeGit.Action.commit, LeGit.Action.merge,
+    LeGit.Action.commit, LeGit.Action.merge, LeGit.Action.revert,
     visitRef, visitTag, visitSha,
     garbageCollector
 ) where
@@ -46,6 +46,13 @@ visitSha fp s = actionErrorCheck pom fp
                     visit r
                     currSha <- sha . phead <$> getPointers r
                     putStrLn $ "HEAD -> " ++ currSha
+
+revert :: FilePath -> Int -> String -> IO ()
+revert fp i msg = actionErrorCheck pom fp
+            where pom r = do
+                    LeGit.Commit.revert r i msg
+                    (Ref name) <- phead <$> getPointers r
+                    putStrLn $ "HEAD -> " ++ name
 
 garbageCollector :: FilePath -> IO ()
 garbageCollector = actionErrorCheck gc

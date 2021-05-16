@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge,revert) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge, revert) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -204,9 +204,9 @@ makeChangeList' par child = map pom
                       filter' = M.filter $ isJust . contentsToMaybe
                       find''  = find' . filter'
 
-revert :: Repo -> Int -> IO ()
-revert r num = do
-        info <- makeCommitInfo r ("reverted " ++ (show num))
+revert :: Repo -> Int -> String -> IO ()
+revert r num msg = do
+        info <- makeCommitInfo r msg
         parents <- getPredCommits r
         let (par,del) = splitAt ((length parents)-num) parents
         let parRec = reconstruct par
