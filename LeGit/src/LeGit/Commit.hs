@@ -109,10 +109,13 @@ status r = do
         let rec = reconstruct parents  --DirStruct
         p <- genFilePaths r  --[FilePath]
         let (l,b',d) = makeFilePathDiff p $ M.keys rec
-        let pom fp = not . null . makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) <$> readFileLines fp
+        let pom fp = if isNothing (cont fp rec) then pure False 
+                                                else not . null . makeDiff (fromMaybe undefined (cont fp rec)) <$> readFileLines fp
         b <- filterM pom b'
-        mapM_ putStrLn $ (map ("r\t"++) l) ++ (map ("c\t"++) b) ++ (map ("a\t"++) d)
-                          
+        if null l && null b && null d then putStrLn "No changes were made."
+                                      else mapM_ putStrLn $ (map ("r\t"++) l) ++ (map ("c\t"++) b) ++ (map ("a\t"++) d)
+                where cont fp rec = contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec 
+                       
                         
 visit :: Repo -> IO ()
 visit r = do 
