@@ -70,12 +70,13 @@ setTag r tagName = do
     writePointers r newP
 
 removeTag :: Repo -> String -> IO ()
-removeTag r s = do
-    (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisTag h then errorMsg $ "Cannot remove tag " ++ s ++ ": HEAD pointing to it"
-                   else writePointers r (Pointers h refsMap $ M.delete s tagsMap)
-        where isThisTag (Tag curr) = s == curr
-              isThisTag _          = False
+removeTag r s = getPointers r >>= pom
+    where isThisTag (Tag curr) = s == curr
+          isThisTag _          = False
+          pom (Pointers h refsMap tagsMap)
+              | isThisTag h = errorMsg $ "Cannot remove tag " ++ s ++ ": HEAD pointing to it"
+              | isNothing $ M.lookup s tagsMap = errorMsg $ "Tag " ++ s ++ " does not exist"
+              | otherwise = writePointers r (Pointers h refsMap $ M.delete s tagsMap)
 
 addRef :: Pointers -> String -> Pointers
 addRef p@(Pointers _ r t) name = Pointers (Ref name) newR t
@@ -89,12 +90,13 @@ setRef r refName = do
     writePointers r newP
 
 removeRef :: Repo -> String -> IO ()
-removeRef r s = do
-    (Pointers h refsMap tagsMap) <- getPointers r
-    if isThisRef h then errorMsg $ "Cannot remove branch " ++ s ++ ": HEAD pointing to it"
-                   else writePointers r (Pointers h (M.delete s refsMap) tagsMap)
-        where isThisRef (Ref curr) = s == curr
-              isThisRef _          = False
+removeRef r s = getPointers r >>= pom
+    where isThisRef (Ref curr) = s == curr
+          isThisRef _          = False
+          pom (Pointers h refsMap tagsMap)
+              | isThisRef h = errorMsg $ "Cannot remove branch " ++ s ++ ": HEAD pointing to it"
+              | isNothing $ M.lookup s refsMap = errorMsg $ "Branch " ++ s ++ " does not exist"
+              | otherwise = writePointers r (Pointers h (M.delete s refsMap) tagsMap)
 
 isCommitable :: Head -> Bool
 isCommitable (Ref _) = True
@@ -147,7 +149,7 @@ setHeadRelative r i = do
     let tmpShaStr = getShaFromHead p
     relatives <- getPredecessorsShaStr tmpShaStr <$> getTree r
     let len = length relatives
-    if len > i then writePointers r $ Pointers (Sha $ relatives !! (len - i)) refsMap tagsMap
+    if len > i then writePointers r $ Pointers (Sha $ relatives !! (len - i - 1)) refsMap tagsMap
                else errorMsg $ "Number " ++ show i ++ " is larger than the number of predecessors"
 
 writeCommit :: Repo -> Commit -> IO ()

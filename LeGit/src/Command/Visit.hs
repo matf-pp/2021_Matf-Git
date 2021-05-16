@@ -29,7 +29,6 @@ optRelative :: Parser VisitType
 optRelative = VisitRelative . read <$> strOption(
              long "relative"
           <> short '~'
-          <> value "1"
           <> help "Jumps back to past commits"
           <> metavar "NUMBER"
             )
