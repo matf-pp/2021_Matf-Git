@@ -29,8 +29,8 @@ optProgram = hsubparser (
            <> commandCommit
            <> commandMerge
            <> commandVisit
-           <> commandGC
            <> commandRevert
+           <> commandGC
          )
 
 opts :: ParserInfo Command
