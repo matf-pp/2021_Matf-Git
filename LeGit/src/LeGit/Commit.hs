@@ -17,6 +17,7 @@ import qualified Data.Algorithm.Diff as D
 import qualified Data.HashMap.Strict as M
 import System.Directory
 import Data.Sort
+import Data.List (nub)
 
 makeCommitInfo :: Repo -> String -> IO (M.HashMap String String)
 makeCommitInfo r msg = do
@@ -147,7 +148,8 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
             | on (&&) elem' r1 r2 = newR
             | isIn a1 && isIn c2  = newE "left add, right change"
             | isIn c1 && isIn a2  = newE "left change, right add"
-            | isIn a1 && isIn a2  = newE "left add, right add"
+            | isIn a1 && isIn a2  = if isDir a1 && isDir a2 then acc 
+                                    else newE "left add, right add"
             | isIn c1 && isIn c2  = if on isMergeable get c1 c2 
                                     then newChange acc (fp, on makeChanges get c1 c2)
                                     else newE "left change, right change"
@@ -164,6 +166,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
                       get   = fromMaybe undefined . lookup fp
                       isIn  = elem fp . map fst
                       elem' = elem fp
+                      isDir = isNothing . contentsToMaybe . get
                       get'  = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
                       makeChanges main              = on makeDiff (recFile $ get' p) main . join main
                       recFile ls                    = fst . foldl pom (ls,0)
@@ -178,7 +181,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
           newError (Left xs) n                   = Left $  n : xs
           newError _ n                           = Left [n]
           join = fmap sort . (++)
-          fps = M.keys p ++ on (++) (map fst) a1 a2
+          fps = nub $ M.keys p ++ on (++) (map fst) a1 a2
                    
              
 merge :: Repo -> String -> String -> IO ()
