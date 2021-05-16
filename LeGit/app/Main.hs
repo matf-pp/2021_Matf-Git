@@ -30,6 +30,7 @@ legit (Visit _ vt) d = pom vt
           pom (VisitRelative n) = LeGit.visitRelative d n
 legit (GarbageCollector _) d = LeGit.garbageCollector d
 legit (Merge _ name msg) d = LeGit.merge d name msg
+legit (Revert _ num msg) d = LeGit.revert d num msg
 
 run :: Command -> IO ()
 run c = d >>= legit c

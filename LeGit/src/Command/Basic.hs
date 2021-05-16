@@ -2,7 +2,7 @@ module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag, RemoveRef, RemoveTag), 
     PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus, PrintRefs, PrintTags),
     VisitType(VisitRef, VisitTag, VisitSha, VisitRelative),
-    Command(Init, Set, Print, Commit, Merge, Visit, GarbageCollector),
+    Command(Init, Set, Print, Commit, Merge, Visit, Revert, GarbageCollector),
     optDir, optMessage, directory
 ) where
 
@@ -29,7 +29,7 @@ data PrintType = PrintUserInfo
 data VisitType = VisitRef {name :: String}
                | VisitTag {name :: String}
                | VisitSha {prefix :: String}
-               | VisitRelative {number :: Int}
+               | VisitRelative {vnumber :: Int}
   deriving (Eq, Show)
 
 data Command = Init {directory :: FilePath, force :: Bool}
@@ -38,6 +38,7 @@ data Command = Init {directory :: FilePath, force :: Bool}
              | Commit {directory :: FilePath, message :: String}
              | Merge {directory :: FilePath, branch :: String, message :: String}
              | Visit {directory :: FilePath, visitType :: VisitType}
+             | Revert {directory :: FilePath, number :: Int, message :: String}
              | GarbageCollector {directory :: FilePath}
   deriving (Eq, Show)
 
