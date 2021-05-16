@@ -9,6 +9,7 @@ import LeGit.Pointers
 import Data.Function
 import Data.Maybe
 import Data.Either
+import Control.Monad (filterM)
 import System.FilePath
 import System.FilePath.Find
 import qualified Data.Algorithm.Diff as D
@@ -105,10 +106,13 @@ status r = do
         parents <- getPredCommits r --[Commit] 
         let rec = reconstruct parents  --DirStruct
         p <- genFilePaths r  --[FilePath]
-        let (l,b,d) = makeFilePathDiff p $ M.keys rec
+        let (l,b',d) = makeFilePathDiff p $ M.keys rec
+        let pom fp = not . null . makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) <$> readFileLines fp
+        b <- filterM pom b'
         let mapt s = (:) s . map ("\t" ++) 
-        mapM_ putStrLn $ mapt "removed:" l ++ mapt "changed:" b ++ mapt "added:" d         
-                
+        mapM_ putStrLn $ mapt "removed:" l ++ mapt "changed:" b ++ mapt "added:" d
+                          
+                        
 visit :: Repo -> IO ()
 visit r = do 
         parents <- getPredCommits r --[Commit] 
@@ -202,4 +206,5 @@ makeMergeChangeList par child = map pom
                 where find'   = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
                       filter' = M.filter $ isJust . contentsToMaybe
                       find''  = find' . filter'
-              
+
+         
