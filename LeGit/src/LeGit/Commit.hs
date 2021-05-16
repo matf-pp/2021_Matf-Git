@@ -139,7 +139,7 @@ isMergeable l r = foldr fja True l
             
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
-makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) $ M.keys p
+makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) fps
     where fja acc fp
             | elem' r1 && isIn c2 = newC c2
             | elem' r1 && isIn a2 = newA a2
@@ -178,6 +178,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
           newError (Left xs) n                   = Left $  n : xs
           newError _ n                           = Left [n]
           join = fmap sort . (++)
+          fps = M.keys p ++ on (++) (map fst) a1 a2
                    
              
 merge :: Repo -> String -> String -> IO ()
