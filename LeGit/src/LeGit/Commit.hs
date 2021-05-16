@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge,revert) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -141,26 +141,22 @@ isMergeable l r = foldr fja True l
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
 makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) fps
     where fja acc fp
-            | elem' r1 && isIn c2 = newC c2
-            | elem' r1 && isIn a2 = newA a2
-            | isIn a1 && elem' r2 = newA a1
-            | isIn c1 && elem' r2 = newC c1
-            | on (||) elem' r1 r2 = newR
+            | elem' r1 && isIn c2 = newC
+            | elem' r1 && isIn a2 = newA
+            | on (&&) elem' r1 r2 = newR
             | isIn a1 && isIn c2  = newE "left add, right change"
             | isIn c1 && isIn a2  = newE "left change, right add"
             | isIn a1 && isIn a2  = newE "left add, right add"
             | isIn c1 && isIn c2  = if on isMergeable get c1 c2 
                                     then newChange acc (fp, on makeChanges get c1 c2)
                                     else newE "left change, right change"
-            | isIn c1             = newC c1
-            | isIn c2             = newC c2
-            | isIn a1             = newA a1
-            | isIn a2             = newA a2
+            | isIn c2             = newC
+            | isIn a2             = newA
             | otherwise           = acc
                 where newR  = newRemove acc fp
                       newE  = newError acc . (fp ++) . (": " ++)
-                      newC  = newChange acc . (fp,) . get
-                      newA  = newAdd acc . (fp,) . get
+                      newC  = newChange acc (fp, get c2)
+                      newA  = newAdd acc (fp, get a2)
                       get   = fromMaybe undefined . lookup fp
                       isIn  = elem fp . map fst
                       elem' = elem fp
@@ -194,18 +190,31 @@ merge' :: DirStruct -> [Commit] -> PureCommit
 merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys childRec parRec 
         where childRec       = reconstruct' parRec child
               pc (r, c, a)   = PureCommit r c a
-              map' (l, b, d) = (makeRemoveList l, makeMergeChangeList parRec childRec b, makeMergeAddList childRec d)
+              map' (l, b, d) = (makeRemoveList l, makeChangeList' parRec childRec b, makeAddList' childRec d)
          
 
-makeMergeAddList  :: DirStruct -> [FilePath] -> [(FilePath,Contents)]
-makeMergeAddList par = map pom
+makeAddList'  :: DirStruct -> [FilePath] -> [(FilePath,Contents)]
+makeAddList' par = map pom
         where pom fp = (fp,fromMaybe undefined $ M.lookup fp par)
 
-makeMergeChangeList :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
-makeMergeChangeList par child = map pom
+makeChangeList' :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
+makeChangeList' par child = map pom
         where pom fp = (fp, on makeDiff find'' par child)
                 where find'   = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
                       filter' = M.filter $ isJust . contentsToMaybe
                       find''  = find' . filter'
 
-         
+revert :: Repo -> Int -> IO ()
+revert r num = do
+        info <- makeCommitInfo r ("reverted " ++ (show num))
+        parents <- getPredCommits r
+        let (par,del) = splitAt ((length parents)-num) parents
+        let parRec = reconstruct par
+        let delRec = reconstruct' parRec del
+        let (l,b,d) = on makeFilePathDiff M.keys parRec delRec
+        let rm = makeRemoveList l
+        let c = makeChangeList' delRec parRec b
+        let a = makeAddList' parRec d
+        let com = Commit info $ PureCommit rm c a
+        writeCommit r com
+             
