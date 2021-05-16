@@ -208,6 +208,8 @@ revert :: Repo -> Int -> String -> IO ()
 revert r num msg = do
         info <- makeCommitInfo r msg
         parents <- getPredCommits r
+        if num <= 0 || (length parents) <= num then errorMsg ("Number " ++ show num ++ " is not a valid number")
+                    else return ()
         let (par,del) = splitAt ((length parents)-num) parents
         let parRec = reconstruct par
         let delRec = reconstruct' parRec del
@@ -217,4 +219,5 @@ revert r num msg = do
         let a = makeAddList' parRec d
         let com = Commit info $ PureCommit rm c a
         writeCommit r com
+        visit r
              
