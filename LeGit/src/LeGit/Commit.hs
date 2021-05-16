@@ -151,8 +151,11 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
             | isIn c1 && isIn c2  = if on isMergeable get c1 c2 
                                     then newChange acc (fp, on makeChanges get c1 c2)
                                     else newE "left change, right change"
+            | isIn a1 && elem' r2  = acc
+            | isIn c1 && elem' r2  = acc                        
             | isIn c2             = newC
             | isIn a2             = newA
+            | elem' r2            = newR
             | otherwise           = acc
                 where newR  = newRemove acc fp
                       newE  = newError acc . (fp ++) . (": " ++)
