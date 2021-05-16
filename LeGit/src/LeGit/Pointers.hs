@@ -1,6 +1,6 @@
 module LeGit.Pointers (
     getPointers, initState, writeCommit, writeMerge, getPredCommits,
-    setHeadFromRef, setHeadFromTag, setHeadFromSha,
+    setHeadFromRef, setHeadFromTag, setHeadFromSha, listRefs, listTags,
     setTag, setRef, removeTag, removeRef, isSha, get3Lists
 ) where
 
@@ -118,6 +118,20 @@ initState r = do
 
 getPredCommits :: Repo -> IO [Commit]
 getPredCommits r = getShaFromRepo r >>= getPredecessors r
+
+listRefs :: Repo -> IO ()
+listRefs r = do
+    (Pointers h refsMap _) <- getPointers r
+    mapM_ putStrLn $ pom h $ M.keys refsMap
+        where pom (Ref name) xs = map (\x -> if x == name then "~~> " ++ x else x) xs
+              pom _ xs          = xs
+
+listTags :: Repo -> IO ()
+listTags r = do
+    (Pointers h _ tagsMap) <- getPointers r
+    mapM_ putStrLn $ pom h $ M.keys tagsMap
+        where pom (Tag name) xs = map (\x -> if x == name then "~~> " ++ x else x) xs
+              pom _ xs          = xs
 
 writeCommit :: Repo -> Commit -> IO ()
 writeCommit r c = do

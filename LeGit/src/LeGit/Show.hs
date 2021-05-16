@@ -30,3 +30,11 @@ showHead = showErrorCheck f
 showStatus :: FilePath -> IO ()
 showStatus = showErrorCheck f
     where f = status 
+
+showRefs :: FilePath -> IO ()
+showRefs = showErrorCheck f
+    where f = listRefs
+
+showTags :: FilePath -> IO ()
+showTags = showErrorCheck f
+    where f = listTags

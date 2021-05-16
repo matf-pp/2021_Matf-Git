@@ -23,7 +23,12 @@ commit fp msg = actionErrorCheck pom fp
 
 merge :: FilePath -> String -> String -> IO ()
 merge fp name msg = actionErrorCheck f fp
-    where f r = LeGit.Commit.merge r name msg
+    where f r = do
+            oldHead <- phead <$> getPointers r
+            LeGit.Commit.merge r name msg
+            let (Ref old) = oldHead
+            putStrLn $ old ++ " + " ++ name ++ " -> " ++ name
+            putStrLn $ "HEAD -> " ++ name
 
 visitRef :: FilePath -> String -> IO ()
 visitRef fp s = actionErrorCheck pom fp
