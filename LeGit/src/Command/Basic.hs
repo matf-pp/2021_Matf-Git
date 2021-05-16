@@ -1,7 +1,7 @@
 module Command.Basic (
     SetType(SetUserName, SetEmail, AddIgnore, RemoveIgnore, AddRef, AddTag, RemoveRef, RemoveTag), 
-    PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus),
-    VisitType(VisitRef, VisitTag, VisitSha),
+    PrintType(PrintUserInfo, PrintIgnore, PrintHead, PrintStatus, PrintRefs, PrintTags),
+    VisitType(VisitRef, VisitTag, VisitSha, VisitRelative),
     Command(Init, Set, Print, Commit, Merge, Visit, GarbageCollector),
     optDir, optMessage, directory
 ) where
@@ -22,11 +22,14 @@ data PrintType = PrintUserInfo
                | PrintIgnore
                | PrintHead
                | PrintStatus
+               | PrintRefs
+               | PrintTags
   deriving (Eq, Show)
 
 data VisitType = VisitRef {name :: String}
                | VisitTag {name :: String}
                | VisitSha {prefix :: String}
+               | VisitRelative {number :: Int}
   deriving (Eq, Show)
 
 data Command = Init {directory :: FilePath, force :: Bool}

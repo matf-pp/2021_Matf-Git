@@ -25,8 +25,17 @@ optSha = VisitSha <$> strOption(
      <> metavar "COMMIT_SHA_PREFIX"
        )
 
+optRelative :: Parser VisitType
+optRelative = VisitRelative . read <$> strOption(
+             long "relative"
+          <> short '~'
+          <> value "1"
+          <> help "Jumps back to past commits"
+          <> metavar "NUMBER"
+            )
+
 optVisit :: Parser Command
-optVisit = Visit <$> optDir <*> (optRef <|> optTag <|> optSha)
+optVisit = Visit <$> optDir <*> (optRef <|> optTag <|> optSha <|> optRelative)
 
 commandVisit :: Mod CommandFields Command
 commandVisit = command "visit" (info optVisit (progDesc "Reconstructs the base directory based on a previous commit"))

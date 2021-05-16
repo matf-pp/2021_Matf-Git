@@ -1,6 +1,6 @@
 module LeGit.Action (
     LeGit.Action.commit, LeGit.Action.merge,
-    visitRef, visitTag, visitSha,
+    visitRef, visitTag, visitSha, visitRelative,
     garbageCollector
 ) where
 
@@ -48,6 +48,14 @@ visitSha :: FilePath -> String -> IO ()
 visitSha fp s = actionErrorCheck pom fp
             where pom r = do
                     setHeadFromSha r s
+                    visit r
+                    currSha <- sha . phead <$> getPointers r
+                    putStrLn $ "HEAD -> " ++ currSha
+
+visitRelative :: FilePath -> Int -> IO ()
+visitRelative fp i = actionErrorCheck pom fp
+            where pom r = do
+                    setHeadRelative r i
                     visit r
                     currSha <- sha . phead <$> getPointers r
                     putStrLn $ "HEAD -> " ++ currSha

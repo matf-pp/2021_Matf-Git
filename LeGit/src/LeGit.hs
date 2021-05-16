@@ -4,8 +4,9 @@ module LeGit (
     Set.addIgnore, Set.removeIgnore,
     Set.addRef, Set.addTag, Set.deleteRef, Set.deleteTag,
     Show.showInfo, Show.showIgnores, Show.showHead, Show.showStatus,
+    Show.showRefs, Show.showTags,
     Action.commit,  Action.merge,
-    Action.visitRef, Action.visitTag, Action.visitSha,
+    Action.visitRef, Action.visitTag, Action.visitSha, Action.visitRelative,
     Action.garbageCollector
 ) where
 

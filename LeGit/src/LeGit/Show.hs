@@ -1,4 +1,4 @@
-module LeGit.Show (showInfo, showIgnores, showHead, showStatus) where
+module LeGit.Show (showInfo, showIgnores, showHead, showStatus, showRefs, showTags) where
 
 import LeGit.Basic
 import LeGit.Ignore

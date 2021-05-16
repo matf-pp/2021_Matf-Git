@@ -1,7 +1,7 @@
 module LeGit.Pointers (
     getPointers, initState, writeCommit, writeMerge, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha, listRefs, listTags,
-    setTag, setRef, removeTag, removeRef, isSha, get3Lists
+    setTag, setRef, removeTag, removeRef, isSha, get3Lists, setHeadRelative
 ) where
 
 import LeGit.Basic
@@ -132,6 +132,16 @@ listTags r = do
     mapM_ putStrLn $ pom h $ M.keys tagsMap
         where pom (Tag name) xs = map (\x -> if x == name then "~~> " ++ x else x) xs
               pom _ xs          = xs
+
+setHeadRelative :: Repo -> Int -> IO ()
+setHeadRelative r i = do
+    if i <= 0 then errorMsg $ "Number " ++ show i ++ " is not a valid number" else return ()
+    p@(Pointers _ refsMap tagsMap) <- getPointers r
+    let tmpShaStr = getShaFromHead p
+    relatives <- getPredecessorsShaStr tmpShaStr <$> getTree r
+    let len = length relatives
+    if len > i then writePointers r $ Pointers (Sha $ relatives !! (len - i)) refsMap tagsMap
+               else errorMsg $ "Number " ++ show i ++ " is larger than the number of predecessors"
 
 writeCommit :: Repo -> Commit -> IO ()
 writeCommit r c = do

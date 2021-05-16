@@ -21,10 +21,13 @@ legit (Print _ arg) d = pom arg d
           pom PrintIgnore   = LeGit.showIgnores
           pom PrintHead     = LeGit.showHead
           pom PrintStatus   = LeGit.showStatus
+          pom PrintTags     = LeGit.showTags
+          pom PrintRefs     = LeGit.showRefs
 legit (Visit _ vt) d = pom vt
-    where pom (VisitRef s) = LeGit.visitRef d s
-          pom (VisitTag s) = LeGit.visitTag d s
-          pom (VisitSha s) = LeGit.visitSha d s
+    where pom (VisitRef s)      = LeGit.visitRef d s
+          pom (VisitTag s)      = LeGit.visitTag d s
+          pom (VisitSha s)      = LeGit.visitSha d s
+          pom (VisitRelative n) = LeGit.visitRelative d n
 legit (GarbageCollector _) d = LeGit.garbageCollector d
 legit (Merge _ name msg) d = LeGit.merge d name msg
 
