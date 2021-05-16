@@ -36,6 +36,7 @@ visitRef fp s = actionErrorCheck pom fp
                     setHeadFromRef r s
                     visit r
                     putStrLn $ "HEAD -> " ++ s
+                    showMessage r
                   
 visitTag :: FilePath -> String -> IO ()
 visitTag fp s = actionErrorCheck pom fp
@@ -43,6 +44,7 @@ visitTag fp s = actionErrorCheck pom fp
                     setHeadFromTag r s
                     visit r
                     putStrLn $ "HEAD -> " ++ s
+                    showMessage r
 
 visitSha :: FilePath -> String -> IO ()
 visitSha fp s = actionErrorCheck pom fp
@@ -51,6 +53,7 @@ visitSha fp s = actionErrorCheck pom fp
                     visit r
                     currSha <- sha . phead <$> getPointers r
                     putStrLn $ "HEAD -> " ++ currSha
+                    showMessage r
 
 revert :: FilePath -> Int -> String -> IO ()
 revert fp i msg = actionErrorCheck pom fp
@@ -66,6 +69,7 @@ visitRelative fp i = actionErrorCheck pom fp
                     visit r
                     currSha <- sha . phead <$> getPointers r
                     putStrLn $ "HEAD -> " ++ currSha
+                    showMessage r
 
 garbageCollector :: FilePath -> IO ()
 garbageCollector = actionErrorCheck gc

@@ -1,7 +1,7 @@
 module LeGit.Pointers (
     getPointers, initState, writeCommit, writeMerge, getPredCommits,
     setHeadFromRef, setHeadFromTag, setHeadFromSha, listRefs, listTags,
-    setTag, setRef, removeTag, removeRef, isSha, get3Lists, setHeadRelative
+    setTag, setRef, removeTag, removeRef, isSha, get3Lists, setHeadRelative, showMessage
 ) where
 
 import LeGit.Basic
@@ -123,7 +123,7 @@ listRefs :: Repo -> IO ()
 listRefs r = do
     (Pointers h refsMap _) <- getPointers r
     mapM_ putStrLn $ pom h $ M.keys refsMap
-        where pom (Ref name) xs = map (\x -> if x == name then "~~> " ++ x else x) xs
+        where pom (Ref name) xs = map (\x -> if x == name then "~~> " ++ x else "    " ++ x) xs
               pom _ xs          = xs
 
 listTags :: Repo -> IO ()
@@ -132,6 +132,13 @@ listTags r = do
     mapM_ putStrLn $ pom h $ M.keys tagsMap
         where pom (Tag name) xs = map (\x -> if x == name then "~~> " ++ x else "    " ++ x) xs
               pom _ xs          = xs
+
+showMessage :: Repo -> IO ()
+showMessage r = do
+    tmpShaStr <- getShaFromRepo r
+    (Commit info _) <- getPred tmpShaStr r
+    putStrLn $ ("message: " ++) $ fromMaybe undefined $ M.lookup "message" info
+--cita iz head koji je sha i trazi adekvatni msg
 
 setHeadRelative :: Repo -> Int -> IO ()
 setHeadRelative r i = do

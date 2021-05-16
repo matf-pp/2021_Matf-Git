@@ -122,7 +122,7 @@ visit r = do
         mapM_ removePathForcibly rmfps
         let fps = sort' $ M.toList rec
         mapM_ create fps
-        putStrLn $ fromMaybe undefined $ M.lookup "message" $ commitInfo $ last parents
+        --putStrLn $ fromMaybe undefined $ M.lookup "message" $ commitInfo $ last parents
                 where create (fp,(File con)) = writeFile fp $ unlines con
                       create (fp,Dir) = createDirectory fp
                       sort' = sortBy (on cmpPath fst)
