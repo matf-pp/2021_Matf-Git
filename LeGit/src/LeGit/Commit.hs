@@ -109,8 +109,7 @@ status r = do
         let (l,b',d) = makeFilePathDiff p $ M.keys rec
         let pom fp = not . null . makeDiff (fromMaybe undefined $ contentsToMaybe $ fromMaybe undefined $ M.lookup fp rec) <$> readFileLines fp
         b <- filterM pom b'
-        let mapt s = (:) s . map ("\t" ++) 
-        mapM_ putStrLn $ mapt "removed:" l ++ mapt "changed:" b ++ mapt "added:" d
+        mapM_ putStrLn $ (map ("r\t"++) l) ++ (map ("c\t"++) b) ++ (map ("a\t"++) d)
                           
                         
 visit :: Repo -> IO ()
@@ -202,7 +201,7 @@ makeAddList' par = map pom
         where pom fp = (fp,fromMaybe undefined $ M.lookup fp par)
 
 makeChangeList' :: DirStruct -> DirStruct -> [FilePath] -> [(FilePath,[Diff])]
-makeChangeList' par child = map pom
+makeChangeList' par child lfp = filter (not . null . snd) ( map pom lfp)
         where pom fp = (fp, on makeDiff find'' par child)
                 where find'   = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
                       filter' = M.filter $ isJust . contentsToMaybe
