@@ -16,6 +16,32 @@ import Data.ByteString.UTF8 (fromString)
 import qualified Data.HashMap.Strict as M
 import qualified Data.Set as S
 
+isAbsolutePureCommit :: PureCommit -> Bool
+isAbsolutePureCommit (PureCommit r c a) = any isAbsolute $ r ++ map fst c ++ map fst a
+
+pureCommitToRelative :: Repo -> PureCommit -> PureCommit
+pureCommitToRelative repo pc@(PureCommit r c a) = if isAbsolutePureCommit pc 
+                                                  then PureCommit (map' r) (zip' c) (zip' a)
+                                                  else pc
+        where map' = map (makeRelative $ baseDir repo)
+              zip' arg = zip (map' $ map fst arg) (map snd arg)
+
+commitToRelative :: Repo -> Commit -> Commit
+commitToRelative repo (Commit i pc) = Commit i $ pureCommitToRelative repo pc
+
+pureCommitToAbsolute :: Repo -> PureCommit -> PureCommit
+pureCommitToAbsolute repo pc@(PureCommit r c a) = if isAbsolutePureCommit pc then pc
+                                                  else PureCommit (map' r) (zip' c) (zip' a)
+        where map' = map (baseDir repo </>)
+              zip' arg = zip (map' $ map fst arg) (map snd arg)
+
+commitToAbsolute :: Repo -> Commit -> Commit
+commitToAbsolute repo (Commit i pc) = Commit i $ pureCommitToAbsolute repo pc
+
+readCommit :: Repo -> ShaStr -> IO Commit
+readCommit r s = commitToAbsolute r
+             <$> readJsonFromRepo (`shaToFP` s) (error $ "Internal Error :: Cannot find commit " ++ s) r
+
 getTree :: Repo -> IO Tree
 getTree = readJsonFromRepo treeFile M.empty
 
@@ -45,7 +71,7 @@ getPredecessorsShaStr :: ShaStr -> Tree -> [ShaStr]
 getPredecessorsShaStr = fmap reverse . getPredecessorsShaStr'
 
 getPred :: ShaStr -> Repo -> IO Commit
-getPred s = readJsonFromRepo (`shaToFP` s) (error $ "Internal Error :: Cannot find commit " ++ s)
+getPred = flip readCommit
 
 shaStrToShaStrs :: Tree -> ShaStr -> [ShaStr]
 shaStrToShaStrs = flip getPredecessorsShaStr
@@ -60,7 +86,7 @@ insertNode r commit parents = do
     let sha' = shaGen commit
     tree <- getTree r
     writeTree r $ M.insert sha' parents tree
-    writeJsonToRepo (`shaToFP` sha') r commit
+    writeJsonToRepo (`shaToFP` sha') r $ commitToRelative r commit
     return sha'
 
 writeTree :: Repo -> Tree -> IO ()
