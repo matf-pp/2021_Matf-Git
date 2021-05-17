@@ -9,7 +9,6 @@ import LeGit.Pointers
 import System.Exit (exitFailure)
 import Data.Function
 import Data.Maybe
-import Data.Either
 import Control.Monad (filterM)
 import System.FilePath
 import System.FilePath.Find
@@ -143,7 +142,7 @@ isMergeable l r = foldr fja True l
                       toPair (Add i c)    = (i, length c)
             
                       
-makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [String] PureCommit
+makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [(FilePath, String)] PureCommit
 makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) fps
     where fja acc fp
             | elem' r1 && isIn c2 = newC
@@ -163,7 +162,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
             | elem' r2            = newR
             | otherwise           = acc
                 where newR  = newRemove acc fp
-                      newE  = newError acc . (fp ++) . (": " ++)
+                      newE  = newError acc . (fp,)
                       newC  = newChange acc (fp, get c2)
                       newA  = newAdd acc (fp, get a2)
                       get   = fromMaybe undefined . lookup fp
@@ -189,12 +188,16 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
              
 merge :: Repo -> String -> String -> IO ()
 merge r s msg = do
-          info <- makeCommitInfo r msg
           (a,b,c) <- get3Lists r s --b grana, c main 
           let parRec = reconstruct a
-          let rez = on (makeMergeCommit parRec) (merge' parRec) c b
-          if isRight rez then (writeMerge r s $ Commit info $ fromRight undefined rez) >> visit r
-                         else (mapM_ putStrLn $ fromLeft undefined rez) >> exitFailure
+          pom $ on (makeMergeCommit parRec) (merge' parRec) c b
+             where pom (Right pc) = do
+                     info <- makeCommitInfo r msg
+                     writeMerge r s $ Commit info pc
+                     visit r
+                   pom (Left xs) = do
+                     mapM_ putStrLn $ map (\(a, b) -> a ++ ": " ++ b) $ mapFst (makeRelative $ baseDir r) xs
+                     exitFailure
 
 merge' :: DirStruct -> [Commit] -> PureCommit
 merge' parRec child = pc $ map' $ on makeFilePathDiff M.keys childRec parRec 

@@ -24,7 +24,7 @@ module LeGit.Basic (
     cmpPath, sortPaths, isParent, jsonExt,
 
     --Utility
-    (?), readFileLines, enumerate, getTimeString, errorMsg, insertBetween, dropBetween
+    (?), readFileLines, enumerate, getTimeString, errorMsg, insertBetween, dropBetween, mapFst
 ) where
 
 import System.Exit
@@ -65,6 +65,9 @@ insertBetween new = fmap pom . flip splitAt
 
 dropBetween :: [a] -> Int -> Int -> [a]
 dropBetween l i n = take i l ++ drop (i + n) l
+
+mapFst :: (a -> b) -> [(a, c)] -> [(b, c)]
+mapFst f xs = zip (map (f . fst) xs) (map snd xs)
 
 -- Repo stuff
 

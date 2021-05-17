@@ -21,19 +21,19 @@ isAbsolutePureCommit (PureCommit r c a) = any isAbsolute $ r ++ map fst c ++ map
 
 pureCommitToRelative :: Repo -> PureCommit -> PureCommit
 pureCommitToRelative repo pc@(PureCommit r c a) = if isAbsolutePureCommit pc 
-                                                  then PureCommit (map' r) (zip' c) (zip' a)
+                                                  then PureCommit (map f r) (zip' c) (zip' a)
                                                   else pc
-        where map' = map (makeRelative $ baseDir repo)
-              zip' arg = zip (map' $ map fst arg) (map snd arg)
+        where f = (makeRelative $ baseDir repo)
+              zip' = mapFst f
 
 commitToRelative :: Repo -> Commit -> Commit
 commitToRelative repo (Commit i pc) = Commit i $ pureCommitToRelative repo pc
 
 pureCommitToAbsolute :: Repo -> PureCommit -> PureCommit
 pureCommitToAbsolute repo pc@(PureCommit r c a) = if isAbsolutePureCommit pc then pc
-                                                  else PureCommit (map' r) (zip' c) (zip' a)
-        where map' = map (baseDir repo </>)
-              zip' arg = zip (map' $ map fst arg) (map snd arg)
+                                                  else PureCommit (map f r) (zip' c) (zip' a)
+        where f = (baseDir repo </>)
+              zip' = mapFst f
 
 commitToAbsolute :: Repo -> Commit -> Commit
 commitToAbsolute repo (Commit i pc) = Commit i $ pureCommitToAbsolute repo pc
