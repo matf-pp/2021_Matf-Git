@@ -142,14 +142,14 @@ isMergeable l r = foldr fja True l
                       toPair (Add i c)    = (i, length c)
             
 
-sortMergeDiffs :: [Diff] -> [Diff] -> [Diff]  -- main, grana
+sortMergeDiffs :: [Diff] -> [Diff] -> [(Bool, Diff)]  -- main, grana
 sortMergeDiffs = on pom sort
         where pom mainDiff granaDiff = reverse $ fst $ pom' ([], (0, 0)) (mainDiff, granaDiff)
-              pom' (diffs, off) ([], grana) = (diffs ++ grana, off)
-              pom' (diffs, off) (main, []) = (diffs ++ main, off)
+              pom' (diffs, off) ([], grana) = (diffs ++ map (False, ) grana, off)
+              pom' (diffs, off) (main, []) = (diffs ++ map (True,) main, off)
               pom' (diffs, (offm, offg)) (m:ms, g:gs) = if mval m < gval g
-                                                        then pom' (m:diffs, (ind m + offm, offg)) (ms, g:gs)
-                                                        else pom' (g:diffs, (offm, ind g + offg)) (m:ms, gs)
+                                                        then pom' ((True, m):diffs, (ind m + offm, offg)) (ms, g:gs)
+                                                        else pom' ((False, g):diffs, (offm, ind g + offg)) (m:ms, gs)
                       where mval (Add i _)    = i + offg
                             mval (Remove i _) = i + offm + offg
                             gval (Add i _)    = i + offm
