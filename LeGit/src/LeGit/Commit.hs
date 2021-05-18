@@ -141,6 +141,21 @@ isMergeable l r = foldr fja True l
                       toPair (Remove i c) = (i, c)
                       toPair (Add i c)    = (i, length c)
             
+
+sortMergeDiffs :: [Diff] -> [Diff] -> [Diff]  -- main, grana
+sortMergeDiffs = on pom sort
+        where pom mainDiff granaDiff = reverse $ fst $ pom' ([], (0, 0)) (mainDiff, granaDiff)
+              pom' (diffs, off) ([], grana) = (diffs ++ grana, off)
+              pom' (diffs, off) (main, []) = (diffs ++ main, off)
+              pom' (diffs, (offm, offg)) (m:ms, g:gs) = if mval m < gval g
+                                                        then pom' (m:diffs, (ind m + offm, offg)) (ms, g:gs)
+                                                        else pom' (g:diffs, (offm, ind g + offg)) (m:ms, gs)
+                      where mval (Add i _)    = i + offg
+                            mval (Remove i _) = i + offm + offg
+                            gval (Add i _)    = i + offm
+                            gval (Remove i _) = i + offg
+                            ind (Add i _)    = i
+                            ind (Remove i _) = i
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [(FilePath, String)] PureCommit
 makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) fps

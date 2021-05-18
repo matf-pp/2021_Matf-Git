@@ -38,7 +38,13 @@ data Diff = Remove {
     deriving(Show,Eq)
     
 instance Ord Diff where 
-        compare a b = on compare diffIndex a b
+        compare a@(Remove _ _) b@(Add _ _) = if diffIndex a == diffIndex b
+                                             then LT
+                                             else on compare diffIndex a b
+        compare a@(Add _ _) b@(Remove _ _) = if diffIndex a == diffIndex b
+                                             then GT
+                                             else on compare diffIndex a b
+        compare a b                          = on compare diffIndex a b
 
 instance JSON Diff where
     showJSON (Remove i n) = makeObj [("type", showJSON "remove")
