@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge, revert) where
+module LeGit.Commit (commit,makeDiff,makeFilePathDiff,visit,status, merge, revert, sortMergeDiffs) where
 
 import LeGit.Basic
 import LeGit.Info
@@ -143,19 +143,19 @@ isMergeable l r = foldr fja True l
             
 
 sortMergeDiffs :: [Diff] -> [Diff] -> [(Bool, Diff)]  -- main, grana
-sortMergeDiffs = on pom sort
+sortMergeDiffs = pom
         where pom mainDiff granaDiff = reverse $ fst $ pom' ([], (0, 0)) (mainDiff, granaDiff)
-              pom' (diffs, off) ([], grana) = (reverse (map (False, ) grana ++ diffs), off)
-              pom' (diffs, off) (main, []) = (reverse (map (True, ) main ++ diffs), off)
+              pom' (diffs, off) ([], grana) = (reverse (map (False, ) grana) ++ diffs, off)
+              pom' (diffs, off) (main, []) = (reverse (map (True, ) main) ++ diffs, off)
               pom' (diffs, (offm, offg)) (m:ms, g:gs) = if mval m < gval g
                                                         then pom' ((True, m):diffs, (ind m + offm, offg)) (ms, g:gs)
                                                         else pom' ((False, g):diffs, (offm, ind g + offg)) (m:ms, gs)
                       where mval (Add i _)    = i + offg
                             mval (Remove i _) = i + offm + offg
                             gval (Add i _)    = i + offm
-                            gval (Remove i _) = i + offg
-                            ind (Add i _)    = i
-                            ind (Remove i _) = i
+                            gval (Remove i _) = i + offm
+                            ind (Add _ i)    = length i
+                            ind (Remove _ i) = - i
                       
 makeMergeCommit :: DirStruct -> PureCommit -> PureCommit -> Either [(FilePath, String)] PureCommit
 makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right $ PureCommit [] [] []) fps
@@ -185,13 +185,13 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
                       elem' = elem fp
                       isDir = isNothing . contentsToMaybe . get
                       get'  = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
-                      makeChanges main grana        = on makeDiff (recFile $ get' p) (map (True,) main) $ sortMergeDiffs main grana
-                      recFile ls                    = fst3 . foldl pom (ls,0,0)
+                      makeChanges main grana = on makeDiff (recFile $ get' p) (map (True,) main) $ sortMergeDiffs main grana
+                      recFile ls             = fst3 . foldl pom (ls,0,0)
                       fst3 (x,_,_) = x
-                      pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg) br ,offm - br,offg)
-                      pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offg - 1) br ,offm,offg - br)
-                      pom (old,offm,offg) (True,(Add ind s)) = (insertBetween s old $ ind + offg - 1 ,offm + length s,offg)
-                      pom (old,offm,offg) (False,(Add ind s))     = (insertBetween s old $ ind + offm - 1 ,offm,offg + length s)
+                      pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm - br,offg)
+                      pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offm -1) br ,offm,offg - br)
+                      pom (old,offm,offg) (True,(Add ind s)) = (insertBetween s old $ ind + offg -1,offm + length s,offg)
+                      pom (old,offm,offg) (False,(Add ind s))     = (insertBetween s old $ ind + offm -1,offm,offg + length s)
           newRemove (Right (PureCommit r c a)) n = Right $ PureCommit (n : r) c a
           newRemove acc _                        = acc
           newChange (Right (PureCommit r c a)) n = Right $ PureCommit r (n : c) a
