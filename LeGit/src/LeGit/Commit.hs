@@ -145,8 +145,8 @@ isMergeable l r = foldr fja True l
 sortMergeDiffs :: [Diff] -> [Diff] -> [(Bool, Diff)]  -- main, grana
 sortMergeDiffs = on pom sort
         where pom mainDiff granaDiff = reverse $ fst $ pom' ([], (0, 0)) (mainDiff, granaDiff)
-              pom' (diffs, off) ([], grana) = (diffs ++ map (False, ) grana, off)
-              pom' (diffs, off) (main, []) = (diffs ++ map (True,) main, off)
+              pom' (diffs, off) ([], grana) = (reverse (map (False, ) grana ++ diffs), off)
+              pom' (diffs, off) (main, []) = (reverse (map (True, ) main ++ diffs), off)
               pom' (diffs, (offm, offg)) (m:ms, g:gs) = if mval m < gval g
                                                         then pom' ((True, m):diffs, (ind m + offm, offg)) (ms, g:gs)
                                                         else pom' ((False, g):diffs, (offm, ind g + offg)) (m:ms, gs)
@@ -185,10 +185,10 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
                       elem' = elem fp
                       isDir = isNothing . contentsToMaybe . get
                       get'  = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
-                      makeChanges main grana        = on makeDiff (recFile $ get' p) (map (True,) main) $ join (map (True,) main) (map (False,) grana)
+                      makeChanges main grana        = on makeDiff (recFile $ get' p) (map (True,) main) $ sortMergeDiffs main grana
                       recFile ls                    = fst3 . foldl pom (ls,0,0)
                       fst3 (x,_,_) = x
-                      pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg - 1) br ,offm - br,offg)
+                      pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg) br ,offm - br,offg)
                       pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offg - 1) br ,offm,offg - br)
                       pom (old,offm,offg) (True,(Add ind s)) = (insertBetween s old $ ind + offg - 1 ,offm + length s,offg)
                       pom (old,offm,offg) (False,(Add ind s))     = (insertBetween s old $ ind + offm - 1 ,offm,offg + length s)
@@ -200,7 +200,6 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
           newAdd acc _                           = acc
           newError (Left xs) n                   = Left $  n : xs
           newError _ n                           = Left [n]
-          join = fmap sort . (++)
           fps = nub $ M.keys p ++ on (++) (map fst) a1 a2
                    
              
