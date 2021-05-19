@@ -153,7 +153,7 @@ sortMergeDiffs = pom
                       where mval (Add i _)    = i + offg
                             mval (Remove i _) = i + offm + offg
                             gval (Add i _)    = i + offm
-                            gval (Remove i _) = i + offm
+                            gval (Remove i _) = i + offm + offg
                             ind (Add _ i)    = length i
                             ind (Remove _ i) = - i
                       
@@ -189,7 +189,7 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
                       recFile ls             = fst3 . foldl pom (ls,0,0)
                       fst3 (x,_,_) = x
                       pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm - br,offg)
-                      pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offm -1) br ,offm,offg - br)
+                      pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm,offg - br)
                       pom (old,offm,offg) (True,(Add ind s)) = (insertBetween s old $ ind + offg -1,offm + length s,offg)
                       pom (old,offm,offg) (False,(Add ind s))     = (insertBetween s old $ ind + offm -1,offm,offg + length s)
           newRemove (Right (PureCommit r c a)) n = Right $ PureCommit (n : r) c a
