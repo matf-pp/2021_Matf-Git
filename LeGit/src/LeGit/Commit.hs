@@ -131,19 +131,19 @@ visit r = do
                       sort' = sortBy (on cmpPath fst)
                  
 isMergeable :: [Diff] -> [Diff] -> Bool
-isMergeable mainDiff granaDiff = pom (0, 0) (mainDiff, granaDiff)
+isMergeable mainDiff granaDiff = pom (0, 0) (mainDiff, granaDiff)  
         where pom (offm, offg) (m:ms, g:gs)
-                | mval m > gval g = if gval g + ind g > mval m then False
-                                    else pom (ind m + offm, offg) (ms, g:gs)
-                | mval m < gval g = if mval m + ind m > gval g then False
-                                    else pom (ind m + offm, offg) (ms, g:gs)
+                | mval m > gval g = if gval g + min 0 (ind g) > mval m then False
+                                    else pom (offm, offg + ind g) (m:ms, gs)                    
+                | mval m < gval g = if mval m + min 0 (ind m) > gval g then False
+                                    else pom (ind m + offm, offg) (ms, g:gs)                         
                 | otherwise       = False
                       where mval (Add i _)    = i + offg
                             mval (Remove i _) = i + offm + offg
                             gval (Add i _)    = i + offm
                             gval (Remove i _) = i + offm + offg
                             ind (Add _ i)    = length i
-                            ind (Remove _ i) = i
+                            ind (Remove _ i) = - i
               pom _ _ = True
 
             
