@@ -131,25 +131,31 @@ visit r = do
                       sort' = sortBy (on cmpPath fst)
                  
 isMergeable :: [Diff] -> [Diff] -> Bool
-isMergeable l r = foldr fja True l
-    where fja d1 acc' = if foldr pom True r then acc' else False
-                where pom d2 acc = on (pom' acc) toPair d1 d2
-                      pom' acc (i1, c1) (i2, c2)
-                            | i1 < i2 = if i1+c1 > i2 then False else acc
-                            | i1 > i2 = if i2+c2 > i1 then False else acc
-                            | otherwise = False
-                      toPair (Remove i c) = (i, c)
-                      toPair (Add i c)    = (i, length c)
+isMergeable mainDiff granaDiff = pom (0, 0) (mainDiff, granaDiff)
+        where pom (offm, offg) (m:ms, g:gs)
+                | mval m > gval g = if gval g + ind g > mval m then False
+                                    else pom (ind m + offm, offg) (ms, g:gs)
+                | mval m < gval g = if mval m + ind m > gval g then False
+                                    else pom (ind m + offm, offg) (ms, g:gs)
+                | otherwise       = False
+                      where mval (Add i _)    = i + offg
+                            mval (Remove i _) = i + offm + offg
+                            gval (Add i _)    = i + offm
+                            gval (Remove i _) = i + offm + offg
+                            ind (Add _ i)    = length i
+                            ind (Remove _ i) = i
+              pom _ _ = True
+
             
 
-sortMergeDiffs :: [Diff] -> [Diff] -> [(Bool, Diff)]  -- main, grana
+sortMergeDiffs :: [Diff] -> [Diff] -> [Either Diff Diff]  -- main, grana
 sortMergeDiffs = pom
         where pom mainDiff granaDiff = reverse $ fst $ pom' ([], (0, 0)) (mainDiff, granaDiff)
-              pom' (diffs, off) ([], grana) = (reverse (map (False, ) grana) ++ diffs, off)
-              pom' (diffs, off) (main, []) = (reverse (map (True, ) main) ++ diffs, off)
+              pom' (diffs, off) ([], grana) = (reverse (map Left grana) ++ diffs, off)
+              pom' (diffs, off) (main, []) = (reverse (map Right main) ++ diffs, off)
               pom' (diffs, (offm, offg)) (m:ms, g:gs) = if mval m < gval g
-                                                        then pom' ((True, m):diffs, (ind m + offm, offg)) (ms, g:gs)
-                                                        else pom' ((False, g):diffs, (offm, ind g + offg)) (m:ms, gs)
+                                                        then pom' (Right m : diffs, (ind m + offm, offg)) (ms, g:gs)
+                                                        else pom' (Left g : diffs, (offm, ind g + offg)) (m:ms, gs)
                       where mval (Add i _)    = i + offg
                             mval (Remove i _) = i + offm + offg
                             gval (Add i _)    = i + offm
@@ -185,13 +191,13 @@ makeMergeCommit p (PureCommit r1 c1 a1) (PureCommit r2 c2 a2) = foldl fja (Right
                       elem' = elem fp
                       isDir = isNothing . contentsToMaybe . get
                       get'  = fromMaybe undefined . contentsToMaybe . fromMaybe undefined . M.lookup fp
-                      makeChanges main grana = on makeDiff (recFile $ get' p) (map (True,) main) $ sortMergeDiffs main grana
+                      makeChanges main grana = on makeDiff (recFile $ get' p) (map Right main) $ sortMergeDiffs main grana
                       recFile ls             = fst3 . foldl pom (ls,0,0)
                       fst3 (x,_,_) = x
-                      pom (old,offm,offg) (True,(Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm - br,offg)
-                      pom (old,offm,offg) (False,(Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm,offg - br)
-                      pom (old,offm,offg) (True,(Add ind s)) = (insertBetween s old $ ind + offg -1,offm + length s,offg)
-                      pom (old,offm,offg) (False,(Add ind s))     = (insertBetween s old $ ind + offm -1,offm,offg + length s)
+                      pom (old,offm,offg) (Right (Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm - br,offg)
+                      pom (old,offm,offg) (Left (Remove ind br)) = (dropBetween old (ind + offm + offg -1) br ,offm,offg - br)
+                      pom (old,offm,offg) (Right (Add ind s)) = (insertBetween s old $ ind + offg -1,offm + length s,offg)
+                      pom (old,offm,offg) (Left (Add ind s))     = (insertBetween s old $ ind + offm -1,offm,offg + length s)
           newRemove (Right (PureCommit r c a)) n = Right $ PureCommit (n : r) c a
           newRemove acc _                        = acc
           newChange (Right (PureCommit r c a)) n = Right $ PureCommit r (n : c) a
